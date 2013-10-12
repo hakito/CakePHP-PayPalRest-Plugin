@@ -11,3 +11,14 @@ Router::connect('/PayPalPayment/Execute/:id/:redirect', array(
         'id' => '[0-9]+'
          )
 );
+
+Router::connect('/PayPalPayment/Lookup/:id', array(
+	'plugin' => 'PayPal',
+	'controller' => 'PayPalPayments',
+	'action' => 'lookup',
+        ),
+    array(
+        'pass' => array('id'),
+        'id' => '[0-9]+'
+         )
+);

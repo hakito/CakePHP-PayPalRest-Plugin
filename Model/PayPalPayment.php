@@ -4,6 +4,7 @@ App::uses('AppModel', 'Model');
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\RedirectUrls;
+use PayPal\Api\PaymentExecution;
 
 class PayPalPayment extends AppModel
 {
@@ -40,7 +41,7 @@ class PayPalPayment extends AppModel
         $transactions = $payment->getTransactions();
 
         /** @var PayPal\Api\RelatedResources Description */
-        $relatedResources = $transactions[0]->getRelatedResources();
+        $relatedResources = @$transactions[0]->getRelatedResources();
 
         if (!empty($relatedResources))
         {
@@ -50,7 +51,7 @@ class PayPalPayment extends AppModel
                 $data['sale_state'] = $sale->getState();
             }
         }
-        return $this->save($data);
+        return $this->save($record);
     }
 
     /**
@@ -84,11 +85,9 @@ class PayPalPayment extends AppModel
 
             $payment->setRedirectUrls($redirectUrls);
 
-            $mode = $config['rest-api']['mode'];
-            $credentials = $config[$mode . 'Credentials'];
 
-            $apiContext = new ApiContext(new OAuthTokenCredential($credentials['ClientId'], $credentials['ClientSecret']));
-            $apiContext->setConfig($config['rest-api']);
+
+            $apiContext = $this->getApiContext();
             $payment->create($apiContext);
 
             if (!$this->savePayment($payment, $id))
@@ -104,6 +103,65 @@ class PayPalPayment extends AppModel
         }
 
         return $dataSource->commit();
+    }
+
+    public function execute($id)
+    {
+        $record = $this->findById($id);
+        if (empty($record['PayPalPayment']))
+            return false;
+        $apiContext = $this->getApiContext();
+        $remittanceIdentifier = $record['PayPalPayment']['remittance_identifier'];
+        $ppReq = \PayPal\Api\Payment::get($record['PayPalPayment']['payment_id'], $apiContext);        
+                
+        $execution = new PaymentExecution();
+        $execution->setPayer_id($_GET['PayerID']);
+        if (!$this->beforePayPalPaymentExecution($remittanceIdentifier))
+            throw new PayPalCallbackException('beforePayPalPaymentExecution did not return true');
+
+        try
+        {
+            $ppRes = $ppReq->execute($execution, $apiContext);
+            $paymentState = $ppRes->getState();
+            $transactions = $ppRes->getTransactions();
+            $relatedResources = $transactions[0]->getRelatedResources();
+            $sale = $relatedResources[0]->getSale();
+            $saleState = $sale->getState();
+        }
+        catch (\Exception $e)
+        {
+            $this->cancelPayPalPaymentExecution($remittanceIdentifier);
+            throw $e;
+        }
+
+        if ($saleState == 'completed' && $paymentState == 'approved')
+            $this->afterPayPalPaymentExecution($remittanceIdentifier);
+        else
+            $this->cancelPayPalPaymentExecution($remittanceIdentifier);
+
+        $this->savePayment($ppRes);
+    }
+
+    private function getApiContext()
+    {
+        $config = Configure::read('PayPalPlugin');
+        $mode = $config['rest-api']['mode'];
+        $credentials = $config[$mode . 'Credentials'];
+        $apiContext = new ApiContext(new OAuthTokenCredential($credentials['ClientId'], $credentials['ClientSecret']));
+        $apiContext->setConfig($config['rest-api']);
+        return $apiContext;
+    }
+
+    public function refreshState($id)
+    {
+        $record = $this->findById($id);
+        if (empty($record['PayPalPayment']))
+            return false;
+        $payment = $record['PayPalPayment'];
+        $ppp = \PayPal\Api\Payment::get($payment['payment_id'], $this->getApiContext());
+
+        debug($ppp->toArray());
+        return $this->savePayment($ppp);
     }
 
     public function setNextCheck($seconds = 0)
@@ -148,7 +206,7 @@ class PayPalPayment extends AppModel
         $password = substr(Configure::read('Security.salt'), 0, 10) . $id;
 		$vi = substr(Configure::read('Security.salt'), -16);
 
-        $compressed = openssl_decrypt($this->base64_url_decode($encryptedText), 'aes128', $password, $vi);
+        $compressed = openssl_decrypt($this->base64_url_decode($encryptedText), 'aes128', $password, true, $vi);
         return gzuncompress($compressed);
     }
 
@@ -161,4 +219,9 @@ class PayPalPayment extends AppModel
     {
         return base64_decode(strtr($input, '-_,', '+/='));
     }
+}
+
+class PayPalCallbackException extends Exception
+{
+
 }

@@ -197,7 +197,7 @@ class PayPalComponent extends Component
     public static function NeutralizeFee($amount)
     {
         $conditions = self::_getConditionsFromConfig();
-        return $amount + self::CalculateFee($amount) / ( 1 - $conditions['fee_relative'] );
+        return $amount + ceil(self::CalculateFee($amount) / ( 1 - $conditions['fee_relative'] ));
     }
 
     private static function _getConditionsFromConfig()

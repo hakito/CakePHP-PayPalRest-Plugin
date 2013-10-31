@@ -175,16 +175,29 @@ class PayPalComponent extends Component
         return $intVal . '.' . $centVal;
     }
 
+    /**
+     *
+     * @param type $amount
+     * @return type PayPal fee based on amount
+     * @throws InvalidArgumentException if PayPal conditions are not set in config
+     */
     public static function CalculateFee($amount)
     {
         $conditions = self::_getConditionsFromConfig();
         return $amount * $conditions['fee_relative'] + $conditions['fee'];
     }
 
+    /**
+     *
+     * @param type $amount
+     * @return type amount plus neutralization amount so when PayPal subtract it's fee
+     * the intended amount will be received.
+     * @throws InvalidArgumentException if PayPal conditions are not set in config
+     */
     public static function NeutralizeFee($amount)
     {
         $conditions = self::_getConditionsFromConfig();
-        return self::CalculateFee($amount) / ( 1 - $conditions['fee_relative'] );
+        return $amount + self::CalculateFee($amount) / ( 1 - $conditions['fee_relative'] );
     }
 
     private static function _getConditionsFromConfig()

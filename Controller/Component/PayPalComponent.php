@@ -174,6 +174,31 @@ class PayPalComponent extends Component
         $centVal = substr($val, -2);
         return $intVal . '.' . $centVal;
     }
+
+    public static function CalculateFee($amount)
+    {
+        $conditions = self::_getConditionsFromConfig();
+        return $amount * $conditions['fee_relative'] + $conditions['fee'];
+    }
+
+    public static function NeutralizeFee($amount)
+    {
+        $conditions = self::_getConditionsFromConfig();
+        return self::CalculateFee($amount) / ( 1 - $conditions['fee_relative'] );
+    }
+
+    private static function _getConditionsFromConfig()
+    {
+        $config = Configure::read('PayPalPlugin');
+        if (empty($config['conditions']))
+            throw new InvalidArgumentException('Missing PayPal conditions.');
+
+        $conditions = $config['conditions'];
+        if (!isset($conditions['fee']) || !isset($conditions['fee_relative']))
+            throw new InvalidArgumentException('Missing PayPal condition fees.');
+
+        return $conditions;
+    }
 }
 
 class PayPalPaymentRedirectException extends Exception

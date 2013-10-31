@@ -27,7 +27,11 @@ if (is_null(Configure::read('PayPalPlugin'))) {
             'log.LogEnabled' => TRUE,
             'log.FileName' => LOGS . 'PayPal.log',
             'log.LogLevel' => 'FINE' // FINE, INFO, WARN or ERROR
-         )
+         ),
+        'conditions' => array(
+            'fee' => 35,              // paypal fixed fee in cents
+            'fee_relative' => '0.034' // relative paypal fee
+        )
     ));
 }
 

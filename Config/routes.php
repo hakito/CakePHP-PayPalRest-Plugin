@@ -1,14 +1,15 @@
 <?php
 
 /* Add route for handling payment notifications */
-Router::connect('/PayPalPayment/Execute/:id/:redirect', array(
+Router::connect('/PayPalPayment/Execute/:id/:success/:redirect', array(
 	'plugin' => 'PayPal',
 	'controller' => 'PayPalPayments',
 	'action' => 'execute',    
         ),
     array(
-        'pass' => array('id', 'redirect'),
-        'id' => '[0-9]+'
+        'pass' => array('id', 'success', 'redirect'),
+        'id' => '[0-9]+',
+        'success' => '[01]',
          )
 );
 

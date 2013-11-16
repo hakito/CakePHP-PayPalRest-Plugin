@@ -80,12 +80,10 @@ class PayPalPayment extends AppModel
 
             $redirectUrls = new RedirectUrls();
             $returnUrl = Router::url('/PayPalPayment/Execute/' . $id . '/', true);
-            $redirectUrls->setReturn_url($returnUrl . $this->encryptRedirectUrl($okUrl, $id));
-            $redirectUrls->setCancel_url($returnUrl . $this->encryptRedirectUrl($cancelUrl, $id));
+            $redirectUrls->setReturn_url($returnUrl . '1/' . $this->encryptRedirectUrl($okUrl, $id));
+            $redirectUrls->setCancel_url($returnUrl . '0/' . $this->encryptRedirectUrl($cancelUrl, $id));
 
             $payment->setRedirectUrls($redirectUrls);
-
-
 
             $apiContext = $this->getApiContext();
             $payment->create($apiContext);

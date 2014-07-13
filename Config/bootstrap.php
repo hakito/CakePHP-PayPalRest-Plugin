@@ -35,7 +35,7 @@ if (is_null(Configure::read('PayPalPlugin'))) {
     ));
 }
 
-/** END PayPalComponent Configuration */
+/** END PayPalPlugin Configuration */
 
 
 $paypal_settings = Configure::read('PayPalPlugin');

@@ -7,7 +7,6 @@
  */
 if (is_null(Configure::read('PayPalPlugin'))) {
 	Configure::write('PayPalPlugin', array(
-        'sdkLoader' => ROOT . DS . 'Vendor' . DS . 'autoload.php', // Path to autoloader for SDK autoloader
         'currency' => 'EUR',
         'tax' => '0.2',
         'checkFile' => TMP . 'next_paypal_check.txt',
@@ -36,8 +35,3 @@ if (is_null(Configure::read('PayPalPlugin'))) {
 }
 
 /** END PayPalPlugin Configuration */
-
-
-$paypal_settings = Configure::read('PayPalPlugin');
-require_once $paypal_settings['sdkLoader'];
-unset ($paypal_settings);

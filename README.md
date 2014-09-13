@@ -12,7 +12,7 @@ If you are using composer simply add the following requirement to your composer.
 
 ```json
 {
-  "require": { "hakito/cakephp-paypal-rest-plugin": "dev-master" }
+  "require": { "hakito/cakephp-paypal-rest-plugin": ">=1.0" }
 }
 ```
 

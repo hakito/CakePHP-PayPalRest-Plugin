@@ -1,0 +1,21 @@
+{
+	"name": "hakito/cakephp-paypal-rest-plugin",
+	"type": "cakephp-plugin",
+        "description": "PayPal plugin for CakePHP using the REST api",
+	"homepage": "https://github.com/hakito/CakePHP-PayPalRest-Plugin",
+    "keywords": ["paypal", "rest", "cakephp", "payment"],
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "Gerd Katzenbeisser",
+            "homepage": "https://github.com/hakito/CakePHP-PayPalRest-Plugin/graphs/contributors"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "paypal/rest-api-sdk-php" : "0.7.*"
+    },
+    "extra": {
+        "installer-name": "PayPal"
+    }
+}

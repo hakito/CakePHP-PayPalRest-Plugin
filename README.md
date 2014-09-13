@@ -1,23 +1,22 @@
+[![Latest Stable Version](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/v/stable.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![Total Downloads](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/downloads.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![Latest Unstable Version](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/v/unstable.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![License](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/license.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin)
+
 CakePHP-PayPalRest-Plugin
 =========================
 
 Simple PayPal plugin for CakePHP using the REST api.
 
-Prerequisites
--------------
-Download the plugin to your app/Plugin directory. This plugin requires the PayPal REST api.
-You can use composer to get the REST api.
+Installation
+------------
+
+If you are using composer simply add the following requirement to your composer.json:
 
 ```json
 {
-    "require": {
-        "paypal/rest-api-sdk-php" : "0.7.*",
-    },
-    "config": {
-        "vendor-dir": "Vendor/"
-    }
+  "require": { "hakito/cakephp-paypal-rest-plugin": "dev-master" }
 }
 ```
+
+Without composer download the plugin to your app/Plugin directory. This plugin requires the PayPal REST api.
 
 Model
 -----

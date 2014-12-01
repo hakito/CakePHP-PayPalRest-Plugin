@@ -12,6 +12,17 @@ class PayPalPayment extends AppModel
     public $useTable = 'PayPalPayments';
 
     /**
+     * Workaround for buggy paypal rest api
+     * @param type $transactions
+     * @return PayPal\Api\RelatedResources
+     */
+    private function getRelatedResources($transactions)
+    {
+        $relatedResources = $transactions[0]->getRelatedResources();
+        return is_array($relatedResources) ? $relatedResources[0] : $relatedResources;
+    }
+
+    /**
      *
      * @param PayPal\Api\Payment $payment
      */
@@ -41,7 +52,7 @@ class PayPalPayment extends AppModel
         $transactions = $payment->getTransactions();
 
         /** @var PayPal\Api\RelatedResources Description */
-        $relatedResources = $transactions[0]->getRelatedResources();
+        $relatedResources = $this->getRelatedResources($transactions);
 
         if (!empty($relatedResources))
         {
@@ -122,7 +133,7 @@ class PayPalPayment extends AppModel
             $ppRes = $ppReq->execute($execution, $apiContext);
             $paymentState = $ppRes->getState();
             $transactions = $ppRes->getTransactions();
-            $relatedResources = $transactions[0]->getRelatedResources();
+            $relatedResources = $this->getRelatedResources($transactions);
             $sale = $relatedResources[0]->getSale();
             $saleState = $sale->getState();
         }

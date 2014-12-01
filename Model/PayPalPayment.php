@@ -41,11 +41,11 @@ class PayPalPayment extends AppModel
         $transactions = $payment->getTransactions();
 
         /** @var PayPal\Api\RelatedResources Description */
-        $relatedResources = @$transactions[0]->getRelatedResources();
+        $relatedResources = $transactions[0]->getRelatedResources();
 
         if (!empty($relatedResources))
         {
-            $sale = $relatedResources[0]->getSale();
+            $sale = $relatedResources->getSale();
             if (!empty($sale))
             {
                 $data['sale_state'] = $sale->getState();

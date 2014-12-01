@@ -134,7 +134,7 @@ class PayPalPayment extends AppModel
             $paymentState = $ppRes->getState();
             $transactions = $ppRes->getTransactions();
             $relatedResources = $this->getRelatedResources($transactions);
-            $sale = $relatedResources[0]->getSale();
+            $sale = $relatedResources->getSale();
             $saleState = $sale->getState();
         }
         catch (\Exception $e)

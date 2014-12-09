@@ -44,6 +44,7 @@ class PayPalComponent extends Component
         $item->setName($name);
         $item->setQuantity($quantity);
         $item->setPrice($price / 100.0);
+        $item->CentPrice = $price;
         $item->setCurrency($this->config['currency']);
 
         if ($id != null)
@@ -82,8 +83,8 @@ class PayPalComponent extends Component
         $itemArray = array();
         foreach($this->items as $item)
         {
-            $centPrice = (int) ($item->getPrice() * 100);
-            $itemSum += $centPrice * $item->getQuantity();
+            $itemSum += $item->CentPrice * $item->getQuantity();
+            unset ($item->CentPrice);
             $itemArray[] = $item;
         }
 

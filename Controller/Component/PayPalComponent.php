@@ -73,10 +73,14 @@ class PayPalComponent extends Component
             $payer->setPayment_method("paypal");
         } else
         {
+            throw new NotImplementedException("no implementation for credit card payments");
+            /*
             $payer->setPaymentMethod('credit_card');
 
             $fi = new FundingInstrument();
+
             $fi->setCredit_card($creditCard);
+            */
         }
 
         $itemSum = 0;

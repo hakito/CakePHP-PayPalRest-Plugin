@@ -70,7 +70,7 @@ class PayPalComponent extends Component
 
         if ($creditCard == null)
         {
-            $payer->setPayment_method("paypal");
+            $payer->setPaymentMethod("paypal");
         } else
         {
             throw new NotImplementedException("no implementation for credit card payments");

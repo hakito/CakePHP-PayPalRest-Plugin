@@ -91,8 +91,8 @@ class PayPalPayment extends AppModel
 
             $redirectUrls = new RedirectUrls();
             $returnUrl = Router::url('/PayPalPayment/Execute/' . $id . '/', true);
-            $redirectUrls->setReturn_url($returnUrl . '1/' . $this->encryptRedirectUrl($okUrl, $id));
-            $redirectUrls->setCancel_url($returnUrl . '0/' . $this->encryptRedirectUrl($cancelUrl, $id));
+            $redirectUrls->setReturnUrl($returnUrl . '1/' . $this->encryptRedirectUrl($okUrl, $id));
+            $redirectUrls->setCancelUrl($returnUrl . '0/' . $this->encryptRedirectUrl($cancelUrl, $id));
 
             $payment->setRedirectUrls($redirectUrls);
 
@@ -124,7 +124,7 @@ class PayPalPayment extends AppModel
         $ppReq = \PayPal\Api\Payment::get($record['PayPalPayment']['payment_id'], $apiContext);        
                 
         $execution = new PaymentExecution();
-        $execution->setPayer_id($_GET['PayerID']);
+        $execution->setPayerId($_GET['PayerID']);
         if (!$this->beforePayPalPaymentExecution($remittanceIdentifier))
             throw new PayPalCallbackException('beforePayPalPaymentExecution did not return true');
 

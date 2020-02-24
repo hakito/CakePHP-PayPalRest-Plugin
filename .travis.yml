@@ -4,7 +4,7 @@ service:
 before_script:
   - mkdir build
 script:
-  - docker run --rm -v "$(pwd):/plugin" -w /plugin hakito/easyname-server
+  - docker run --rm -v "$(pwd):/plugin" -w /plugin
     hakito/easyname-server vendor/bin/phpunit --coverage-clover build/cover.xml
 after_success:
   - composer require php-coveralls/php-coveralls --no-interaction

@@ -2,11 +2,11 @@ language: php
 service:
   - docker
 before_script:
+  - composer require php-coveralls/php-coveralls --no-interaction
   - mkdir build
 script:
   - docker run --rm -v "$(pwd):/plugin" -w /plugin
     hakito/easyname-server vendor/bin/phpunit --coverage-clover build/cover.xml
 after_success:
-  - composer require php-coveralls/php-coveralls --no-interaction
   - sed "s:name=\"\\/plugin:name=\"\\$(pwd):" < build/cover.xml > build/host-cover.xml
   - vendor/bin/php-coveralls -v --coverage_clover build/host-cover.xml --json_path build/cover.json

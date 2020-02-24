@@ -1,24 +1,18 @@
 <?php
-/**
- * BEGIN PayPalPlugin Configuration
- * Use these settings to set defaults for the PayPal component.
- *
- * put this code into your bootstrap.php, so you can override settings.
- */
-if (is_null(Configure::read('PayPalPlugin'))) {
-	Configure::write('PayPalPlugin', array(
+return [
+    'PayPal' => [
         'currency' => 'EUR',
         'tax' => '0.2',
         'checkFile' => TMP . 'next_paypal_check.txt',
-        'liveCredentials' => array(
+        'liveCredentials' => [
             'ClientId' => 'clientId',    // client id obtained from the developer portal
             'ClientSecret' => 'clientSecret' // client secret obtained from the developer portal
-        ),
+        ],
          'sandboxCredentials' => array(
             'ClientId' => 'EBWKjlELKMYqRNQ6sYvFo64FtaRLRR5BdHEESmha49TM',    // client id obtained from the developer portal
             'ClientSecret' => 'EO422dn3gQLgDbuwqTjzrFgFtaRLRR5BdHEESmha49TM' // client secret obtained from the developer portal
         ),
-        'rest-api' => array(
+        'rest-api' => [
             'mode' => 'sandbox',    // can be set to sandbox / live
             'http.ConnectionTimeOut' => '30',
             'http.Retry' => '1',
@@ -26,12 +20,10 @@ if (is_null(Configure::read('PayPalPlugin'))) {
             'log.LogEnabled' => TRUE,
             'log.FileName' => LOGS . 'PayPal.log',
             'log.LogLevel' => 'FINE' // FINE, INFO, WARN or ERROR
-         ),
-        'conditions' => array(
+         ],
+        'conditions' => [
             'fee' => 35,              // paypal fixed fee in cents
             'fee_relative' => '0.034' // relative paypal fee
-        )
-    ));
-}
-
-/** END PayPalPlugin Configuration */
+        ]
+    ]
+];

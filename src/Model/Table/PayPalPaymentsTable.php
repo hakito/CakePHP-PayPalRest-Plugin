@@ -1,22 +1,30 @@
 <?php
 
-App::uses('AppModel', 'Model');
+namespace PayPal\Model\Table;
+
+use Cake\Core\Configure;
+use Cake\ORM\Table;
+use Cake\Routing\Router;
+
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\PaymentExecution;
 
-class PayPalPayment extends AppModel
+class PayPalPaymentsTable extends Table
 {
 
-    public $useTable = 'PayPalPayments';
+    public function initialize(array $config)
+    {
+        $this->setTable('PayPalPayments');
+    }
 
     /**
      * Workaround for buggy paypal rest api
      * @param type $transactions
-     * @return PayPal\Api\RelatedResources
+     * @return \PayPal\Api\RelatedResources
      */
-    private function getRelatedResources($transactions)
+    protected function getRelatedResources($transactions)
     {
         $relatedResources = $transactions[0]->getRelatedResources();
         return is_array($relatedResources) ? $relatedResources[0] : $relatedResources;
@@ -24,34 +32,32 @@ class PayPalPayment extends AppModel
 
     /**
      *
-     * @param PayPal\Api\Payment $payment
+     * @param \PayPal\Api\Payment $payment
      */
     public function savePayment($payment, $id = null)
     {
         $paymentId = $payment->getId();
 
-        $record = $this->findByPaymentId($paymentId);
+        $record = $this->findByPaymentId($paymentId)->first();
         if (empty($record) && $id != null)
         {
-            $record = $this->findById($id);
+            $record = $this->findById($id)->first();
         }
 
         if (empty($record))
         {
-            $this->create();
-            $record = array('PayPalPayment');
+            $record = new \Cake\ORM\Entity();
         }
 
-        $data = &$record['PayPalPayment'];
-        if (empty($data['payment_id']))
-            $data['payment_id'] = $paymentId;
-        
-        $data['payment_state'] = $payment->getState();
+        if (empty($record->payment_id))
+            $record->payment_id = $paymentId;
+
+        $record->payment_state = $payment->getState();
 
         /** @var \PayPal\Api\Transaction */
         $transactions = $payment->getTransactions();
 
-        /** @var PayPal\Api\RelatedResources Description */
+        /** @var \PayPal\Api\RelatedResources Description */
         $relatedResources = $this->getRelatedResources($transactions);
 
         if (!empty($relatedResources))
@@ -59,7 +65,7 @@ class PayPalPayment extends AppModel
             $sale = $relatedResources->getSale();
             if (!empty($sale))
             {
-                $data['sale_state'] = $sale->getState();
+                $record->sale_state = $sale->getState();
             }
         }
         return $this->save($record);
@@ -69,25 +75,20 @@ class PayPalPayment extends AppModel
      *
      * @param string $remittanceIdentifier
      * @param \PayPal\Api\Payment $payment
-     * @throws Exception
+     * @throws \Exception
      */
     public function createPayment($remittanceIdentifier, &$payment, $okUrl, $cancelUrl)
     {
         $config = Configure::read('PayPalPlugin');
 
-        $dataSource = $this->getDataSource();
-        $dataSource->begin();
+        return $this->getConnection()->transactional(function () use ($remittanceIdentifier, &$payment, $okUrl, $cancelUrl) {
+            $record = new \Cake\ORM\Entity();
+            $record->remittance_identifier = $remittanceIdentifier;
 
-        try
-        {
-            $this->create();
-            if (!$this->save(array('PayPalPayment' => array('remittance_identifier' => $remittanceIdentifier))))
-            {
-                $dataSource->rollback();
+            if (!$this->save($record))
                 return false;
-            }
 
-            $id = $this->getInsertID();
+            $id = $record->id;
 
             $redirectUrls = new RedirectUrls();
             $returnUrl = Router::url('/PayPalPayment/Execute/' . $id . '/', true);
@@ -96,33 +97,24 @@ class PayPalPayment extends AppModel
 
             $payment->setRedirectUrls($redirectUrls);
 
-            $apiContext = $this->getApiContext();
+            $apiContext = self::getApiContext();
             $payment->create($apiContext);
 
-            if (!$this->savePayment($payment, $id))
-            {
-                $dataSource->rollback();
-                return false;
-            }
-        }
-        catch (Exception $e)
-        {
-            $dataSource->rollback();
-            throw $e;
-        }
-
-        return $dataSource->commit();
+            return $this->savePayment($payment, $id);
+        });
     }
 
     public function execute($id)
     {
-        $record = $this->findById($id);
-        if (empty($record['PayPalPayment']))
+        $record = $this->findById($id)->first();
+        if (empty($record))
             return false;
-        $apiContext = $this->getApiContext();
-        $remittanceIdentifier = $record['PayPalPayment']['remittance_identifier'];
-        $ppReq = \PayPal\Api\Payment::get($record['PayPalPayment']['payment_id'], $apiContext);        
-                
+
+        $apiContext = self::getApiContext();
+        $remittanceIdentifier = $record->remittance_identifier;
+        /* @var $ppReq Payment */
+        $ppReq = $this->ApiGet($record->payment_id);
+
         $execution = new PaymentExecution();
         $execution->setPayerId($_GET['PayerID']);
         if (!$this->beforePayPalPaymentExecution($remittanceIdentifier))
@@ -130,7 +122,7 @@ class PayPalPayment extends AppModel
 
         try
         {
-            $ppRes = $ppReq->execute($execution, $apiContext);
+            $ppRes = $ppReq->execute($execution);
             $paymentState = $ppRes->getState();
             $transactions = $ppRes->getTransactions();
             $relatedResources = $this->getRelatedResources($transactions);
@@ -151,9 +143,9 @@ class PayPalPayment extends AppModel
         $this->savePayment($ppRes);
     }
 
-    private function getApiContext()
+    public static function getApiContext()
     {
-        $config = Configure::read('PayPalPlugin');
+        $config = Configure::read('PayPal');
         $mode = $config['rest-api']['mode'];
         $credentials = $config[$mode . 'Credentials'];
         $apiContext = new ApiContext(new OAuthTokenCredential($credentials['ClientId'], $credentials['ClientSecret']));
@@ -163,13 +155,12 @@ class PayPalPayment extends AppModel
 
     public function refreshState($id)
     {
-        $record = $this->findById($id);
-        if (empty($record['PayPalPayment']))
+        $payment = $this->findById($id)->first();
+        if (empty($payment))
             return false;
-        $payment = $record['PayPalPayment'];
-        $ppp = \PayPal\Api\Payment::get($payment['payment_id'], $this->getApiContext());
 
-        debug($ppp->toArray());
+        $ppp = $this->ApiGet($payment->payment_id);
+
         return $this->savePayment($ppp);
     }
 
@@ -183,7 +174,7 @@ class PayPalPayment extends AppModel
         }
         return false;
     }
-    
+
     public function getStoredTime()
     {
         $config = Configure::read('PayPalPlugin');
@@ -192,9 +183,9 @@ class PayPalPayment extends AppModel
         {
             file_put_contents($filename, 0);
             return 0;
-        }        
+        }
     }
-    
+
     public function setStoredTime($time)
     {
         $config = Configure::read('PayPalPlugin');
@@ -228,9 +219,14 @@ class PayPalPayment extends AppModel
     {
         return base64_decode(strtr($input, '-_,', '+/='));
     }
+
+    protected function ApiGet($paymentId)
+    {
+        return \PayPal\Api\Payment::get($paymentId, self::getApiContext());
+    }
 }
 
-class PayPalCallbackException extends Exception
+class PayPalCallbackException extends \Exception
 {
 
 }

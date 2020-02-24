@@ -1,5 +1,7 @@
 <?php
 
+namespace PayPal\Controller\Component;
+
 use PayPal\Api\Amount;
 use PayPal\Api\Payer;
 use PayPal\Api\Payment;
@@ -7,12 +9,10 @@ use PayPal\Api\Transaction;
 use PayPal\Api\ItemList;
 use PayPal\Api\Item;
 
-App::uses('Component', 'Controller');
+use Cake\Controller\Component;
 
 class PayPalComponent extends Component
 {
-
-    public $components = array('Session');
 
     /** @var \PayPal\Api\Item[] */
     private $items;
@@ -20,15 +20,15 @@ class PayPalComponent extends Component
     /** @var int shipping in cents */
     public $Shipping = "0";
 
-    /** @var PayPalPayment */
-    public $PayPalPayment;
+    /** @var PayPalPaymentsTable */
+    public $PayPalPayments;
 
-    public function __construct($collection)
+    public function initialize()
     {
-        parent::__construct($collection);
+        parent::initialize();
         $this->config = Configure::read('PayPalPlugin');
-        $this->items = array();
-        $this->PayPalPayment = ClassRegistry::init('PayPal.PayPalPayment');
+        $this->items = [];
+        $this->loadModel('PayPal.PayPalPayments');
     }
 
     /**
@@ -74,13 +74,6 @@ class PayPalComponent extends Component
         } else
         {
             throw new NotImplementedException("no implementation for credit card payments");
-            /*
-            $payer->setPaymentMethod('credit_card');
-
-            $fi = new FundingInstrument();
-
-            $fi->setCredit_card($creditCard);
-            */
         }
 
         $itemSum = 0;
@@ -119,10 +112,10 @@ class PayPalComponent extends Component
         $payment->setTransactions(array($transaction));
         $payment->setIntent('sale');
 
-        if (!$this->PayPalPayment->createPayment($remittanceIdentifier, $payment, $okUrl, $cancelUrl))
+        if (!$this->PayPalPayments->createPayment($remittanceIdentifier, $payment, $okUrl, $cancelUrl))
         {
             $exception = new PayPalPaymentRedirectException('Could not save payment.');
-            $exception->errors = $this->PayPalPayment->validationErrors;
+            $exception->errors = $this->PayPalPayments->validationErrors;
             throw $exception;
         }
 
@@ -137,9 +130,8 @@ class PayPalComponent extends Component
                 }
             }
 
-            $_SESSION['paymentId'] = $payment->getId();
             if(isset($redirectUrl)) {
-                
+
                 header("Location: $redirectUrl");
                 exit;
             }

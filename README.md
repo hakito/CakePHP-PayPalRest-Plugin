@@ -8,18 +8,15 @@ Simple PayPal plugin for CakePHP using the REST api.
 Installation
 ------------
 
-If you are using composer simply add the following requirement to your composer.json:
+If you are using composer simply add it with:
 
-```json
-{
-  "require": { "hakito/cakephp-paypal-rest-plugin": ">=1.0" }
-}
+```bash
+composer require hakito/cakephp-paypal-rest-plugin
 ```
-
-Without composer download the plugin to your app/Plugin directory. This plugin requires the PayPal REST api.
 
 Model
 -----
+
 Add the following table to your database.
 
 ```sql
@@ -52,8 +49,13 @@ Following is the minimal set to start a payment request:
 
 ```php
 class OrdersController extends AppController {
-    public $components = array('PayPal.PayPal');
-    
+
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadComponent('PayPal.PayPal', []);
+    }
+
     public yourPaymentAction($order) {
         foreach ($order['OrderedItem'] as $orderedItem)
         {
@@ -61,27 +63,28 @@ class OrdersController extends AppController {
             $price = $orderedItem['price'];
             $itemName = $orderedItem['name'];
             $itemId = $orderedItem['id'];
-            
+
             // money values are always integer values in cents
-            $this->PayPal->AddArticle($itemName, $quantity, $price, $itemId); 
+            $this->PayPal->AddArticle($itemName, $quantity, $price, $itemId);
         }
 
         // optional shipping fee
         $this->PayPal->Shipping = 123; // money values are always integer values in cents
-        
+
         // Url the client is redirected to when PayPal payment is performed successfully
         // NOTE: This does not mean that the payment is COMPLETE.
-        $okUrl =  Router::url('/paymentOk', true);
-        
+        $okUrl = Router::url('/paymentOk', true);
+
         // Url the client is redirected to whe PayPal payment fails or was cancelled
         $nOkUrl = Router::url('/paymentFailed', true);
-        
-        return $this->PayPal->PaymentRedirect($order['id'], $okUrl, $nOkUrl);    
+
+        return $this->PayPal->PaymentRedirect($order['id'], $okUrl, $nOkUrl);
     }
 }
 ```
 
 To receive the payment notifications in your app the Plugin needs 3 functions available in your AppModel.php
+
 ```php
 
     public function beforePayPalPaymentExecution($orderId)
@@ -90,7 +93,7 @@ To receive the payment notifications in your app the Plugin needs 3 functions av
         // back to your site. (You could begin a transaction here)
         // True is always expected as return value, otherwise the plugin
         // will throw an exception
-        return true; 
+        return true;
     }
 
     public function cancelPayPalPaymentExecution($orderId)
@@ -112,12 +115,4 @@ To receive the payment notifications in your app the Plugin needs 3 functions av
 Remarks
 -------
 
-The current implementation does not support automatic handling payments in pending state. 
-
-Donate
-------
-
-Any donation is welcome
-
-* PayPal: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RLE88DG8CSVUE
-* Bitcoin: 1QHLTMZDwTJqUK9VZWa1RKtPCHnT7wTu3q
+The current implementation does not support automatic handling payments in pending state.

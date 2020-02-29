@@ -3,6 +3,7 @@
 namespace PayPal\Model\Table;
 
 use Cake\Core\Configure;
+use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Routing\Router;
 
@@ -117,9 +118,14 @@ class PayPalPaymentsTable extends Table
 
         $execution = new PaymentExecution();
         $execution->setPayerId($_GET['PayerID']);
-        if (!$this->beforePayPalPaymentExecution($remittanceIdentifier))
+        $handled = false;
+        $event = new Event('PayPal.Model.PayPalPayments.BeforePaymentExecution',
+            $this, ['RemittanceIdentifier' => $remittanceIdentifier, 'Handled' => &$handled] );
+        $this->getEventManager()->dispatch($event);
+        if (!$handled)
             throw new PayPalCallbackException('beforePayPalPaymentExecution did not return true');
 
+        $event = null;
         try
         {
             $ppRes = $ppReq->execute($execution);
@@ -128,17 +134,18 @@ class PayPalPaymentsTable extends Table
             $relatedResources = $this->getRelatedResources($transactions);
             $sale = $relatedResources->getSale();
             $saleState = $sale->getState();
+            if ($saleState == 'completed' && $paymentState == 'approved')
+                $event = new Event('PayPal.Model.PayPalPayments.AfterPaymentExecution',
+                    $this, ['RemittanceIdentifier' => $remittanceIdentifier]);
         }
-        catch (\Exception $e)
+        finally
         {
-            $this->cancelPayPalPaymentExecution($remittanceIdentifier);
-            throw $e;
-        }
+            if ($event == null)
+                $event = new Event('PayPal.Model.PayPalPayments.CancelPaymentExecution',
+                    $this, ['RemittanceIdentifier' => $remittanceIdentifier]);
 
-        if ($saleState == 'completed' && $paymentState == 'approved')
-            $this->afterPayPalPaymentExecution($remittanceIdentifier);
-        else
-            $this->cancelPayPalPaymentExecution($remittanceIdentifier);
+            $this->getEventManager()->dispatch($event);
+        }
 
         $this->savePayment($ppRes);
     }

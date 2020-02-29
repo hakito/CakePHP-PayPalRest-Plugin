@@ -3,6 +3,7 @@
 namespace PayPal\Test\TestCase\Model\Table;
 
 use Cake\Core\Configure;
+use Cake\Event\EventList;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
 
@@ -14,7 +15,7 @@ use PayPal\Model\Table\PayPalPaymentsTable;
 /**
  * @var \PayPal\Model\Table\PayPalPaymentTable PayPalPayment
  */
-class PayPalPaymentTableTest extends TestCase
+class PayPalPaymentsTableTest extends TestCase
 {
     public $fixtures = ['plugin.PayPal.PayPalPayments'];
 
@@ -22,6 +23,7 @@ class PayPalPaymentTableTest extends TestCase
     {
         parent::setUp();
         $this->PayPalPayments = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments');
+        $this->PayPalPayments->getEventManager()->setEventList(new EventList());
     }
 
     public function testGetApiContext()
@@ -169,27 +171,27 @@ class PayPalPaymentTableTest extends TestCase
         $this->assertTextContains('0/cancel', $redirectUrls->getCancelUrl());
     }
 
-    public function testExecuteCompletedAndApproved()
+    private function prepareExecuteTest($saleState = 'completed', $paymentState = 'approved')
     {
         $model = $this->getMockForModel('PayPal.PayPalPayments',
         [
             'ApiGet',
             'savePayment',
             'getRelatedResources',
-            'beforePayPalPaymentExecution',
-            'afterPayPalPaymentExecution'
         ]);
+
+        $model->getEventManager()->setEventList(new EventList());
 
         $p = $this->getMockBuilder(Payment::class)
             ->setMethods(['execute'])
             ->getMock();
 
-        $p->setState('approved');
+        $p->setState($paymentState);
 
         $rr = new RelatedResources();
         $s = new Sale();
         $rr->setSale($s);
-        $s->setState('completed');
+        $s->setState($saleState);
 
         $model->expects($this->once())
             ->method('ApiGet')
@@ -200,20 +202,80 @@ class PayPalPaymentTableTest extends TestCase
             ->method('getRelatedResources')
             ->willReturn($rr);
 
-        $model->expects($this->once())
-            ->method('beforePayPalPaymentExecution')
-            ->with('ri')
-            ->willReturn(true);
-
-        $model->expects($this->once())
-            ->method('afterPayPalPaymentExecution')
-            ->with('ri');
+        $model->getEventManager()->on('PayPal.Model.PayPalPayments.BeforePaymentExecution',
+        function($event, $remittanceIdentifier, &$handled)
+        {
+            $handled = true;
+        });
 
         $p->expects($this->once())
             ->method('execute')
             ->willReturn($p);
 
+        return $model;
+    }
+
+    public function testExecuteCompletedAndApproved()
+    {
+        $model = $this->prepareExecuteTest();
+
         $model->execute(1);
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.AfterPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+    }
+
+    public function testExecuteCancelOnInvalidSaleState()
+    {
+        $model = $this->prepareExecuteTest('invalid');
+
+        $model->execute(1);
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.CancelPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+    }
+
+    public function testExecuteCancelOnInvalidPaymentState()
+    {
+        $model = $this->prepareExecuteTest('completed', 'invalid');
+
+        $model->execute(1);
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.CancelPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+    }
+
+    public function testExecuteCancelOnException()
+    {
+        $model = $this->getMockForModel('PayPal.PayPalPayments',
+        [
+            'ApiGet'
+        ]);
+
+        $model->getEventManager()->setEventList(new EventList());
+
+        $p = $this->getMockBuilder(Payment::class)
+            ->setMethods(['execute'])
+            ->getMock();
+
+        $p->expects($this->once())
+            ->method('execute')
+            ->will($this->throwException(new \Exception('dummy')));
+
+        $model->expects($this->once())
+            ->method('ApiGet')
+            ->with('PayPalId')
+            ->willReturn($p);
+        $model->getEventManager()->on('PayPal.Model.PayPalPayments.BeforePaymentExecution',
+        function($event, $remittanceIdentifier, &$handled)
+        {
+            $handled = true;
+        });
+
+        try {
+            $model->execute(1);
+        } catch (\Exception $th) {
+            $this->assertEquals('dummy', $th->getMessage());
+        }
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
+        $this->assertEventFiredWith('PayPal.Model.PayPalPayments.CancelPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
     }
 
     public function testGetRelatedResources()

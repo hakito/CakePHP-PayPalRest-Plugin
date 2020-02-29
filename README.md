@@ -89,30 +89,30 @@ To receive the payment notifications in your app the Plugin expects 3 event hand
 
 ```php
 
-    $eventManager = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments')->getEventManager();
-    $eventManager->setEventList(new EventList());
+$eventManager = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments')->getEventManager();
+$eventManager->setEventList(new EventList());
 
-    // Will be called just after PayPal redirects the customer
-    // back to your site. (You could start a transaction here)
-    $eventManager->on('PayPal.Model.PayPalPayments.BeforePaymentExecution',
-    function($event, $remittanceIdentifier, &$handled)
-    {
-        // Handled is expected to be set to TRUE, otherwise the plugin
-        // will throw an exception
-        $handled = true;
-    });
+// Will be called just after PayPal redirects the customer
+// back to your site. (You could start a transaction here)
+$eventManager->on('PayPal.Model.PayPalPayments.BeforePaymentExecution',
+function($event, $remittanceIdentifier, &$handled)
+{
+    // Handled is expected to be set to TRUE, otherwise the plugin
+    // will throw an exception
+    $handled = true;
+});
 
-    // Will be called when the REST api call fails or
-    // the saleState != 'completed' or paymentState != 'approved'
-    // (You could rollback a transaction here)
-    $eventManager->on('PayPal.Model.PayPalPayments.CancelPaymentExecution',
-    function($event, $remittanceIdentifier) {});
+// Will be called when the REST api call fails or
+// the saleState != 'completed' or paymentState != 'approved'
+// (You could rollback a transaction here)
+$eventManager->on('PayPal.Model.PayPalPayments.CancelPaymentExecution',
+function($event, $remittanceIdentifier) {});
 
-    // Will be called after the REST api call
-    // and only if the saleState == 'completed' and paymentState == 'approved'
-    // (You could commit a transaction here)
-    $eventManager->on('PayPal.Model.PayPalPayments.AfterPaymentExecution',
-    function($event, $remittanceIdentifier) {});
+// Will be called after the REST api call
+// and only if the saleState == 'completed' and paymentState == 'approved'
+// (You could commit a transaction here)
+$eventManager->on('PayPal.Model.PayPalPayments.AfterPaymentExecution',
+function($event, $remittanceIdentifier) {});
 
 ```
 

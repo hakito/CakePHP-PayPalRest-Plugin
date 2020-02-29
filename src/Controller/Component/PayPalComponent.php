@@ -2,14 +2,16 @@
 
 namespace PayPal\Controller\Component;
 
+use Cake\Core\Configure;
+use Cake\Controller\Component;
+use Cake\ORM\TableRegistry;
+
 use PayPal\Api\Amount;
 use PayPal\Api\Payer;
 use PayPal\Api\Payment;
 use PayPal\Api\Transaction;
 use PayPal\Api\ItemList;
 use PayPal\Api\Item;
-
-use Cake\Controller\Component;
 
 class PayPalComponent extends Component
 {
@@ -23,12 +25,17 @@ class PayPalComponent extends Component
     /** @var PayPalPaymentsTable */
     public $PayPalPayments;
 
-    public function initialize()
+    public function initialize(array $config)
     {
-        parent::initialize();
-        $this->config = Configure::read('PayPalPlugin');
+        parent::initialize($config);
+        $this->config = Configure::read('PayPal');
         $this->items = [];
-        $this->loadModel('PayPal.PayPalPayments');
+        $this->PayPalPayments = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments');
+    }
+
+    public function startup($event)
+    {
+        $this->Controller = $event->getSubject();
     }
 
     /**
@@ -60,21 +67,14 @@ class PayPalComponent extends Component
     /**
      *
      * @param string $remittanceIdentifier id to be used for the callback function
-     * @param \PayPal\Api\CreditCard $creditCard
      * @param string Description text for the transaction
+     * @throws \Cake\ORM\Exception\PersistenceFailedException when creation of database entry failed
      */
-    public function PaymentRedirect($remittanceIdentifier, $okUrl, $cancelUrl, $creditCard = null, $description = null)
+    public function PaymentRedirect($remittanceIdentifier, $okUrl, $cancelUrl, $description = null)
     {
-
         $payer = new Payer();
 
-        if ($creditCard == null)
-        {
-            $payer->setPaymentMethod("paypal");
-        } else
-        {
-            throw new NotImplementedException("no implementation for credit card payments");
-        }
+        $payer->setPaymentMethod("paypal");
 
         $itemSum = 0;
         $itemArray = array();
@@ -112,32 +112,20 @@ class PayPalComponent extends Component
         $payment->setTransactions(array($transaction));
         $payment->setIntent('sale');
 
-        if (!$this->PayPalPayments->createPayment($remittanceIdentifier, $payment, $okUrl, $cancelUrl))
+        $this->PayPalPayments->createPayment($remittanceIdentifier, $payment, $okUrl, $cancelUrl);
+
+        foreach ($payment->getLinks() as $link)
         {
-            $exception = new PayPalPaymentRedirectException('Could not save payment.');
-            $exception->errors = $this->PayPalPayments->validationErrors;
-            throw $exception;
+            if ($link->getRel() == 'approval_url')
+            {
+                $redirectUrl = $link->getHref();
+                break;
+            }
         }
 
-        if ($creditCard == null)
+        if(isset($redirectUrl))
         {
-            foreach ($payment->getLinks() as $link)
-            {
-                if ($link->getRel() == 'approval_url')
-                {
-                    $redirectUrl = $link->getHref();
-                    break;
-                }
-            }
-
-            if(isset($redirectUrl)) {
-
-                header("Location: $redirectUrl");
-                exit;
-            }
-        } else
-        {
-            // TODO handle credit card payments
+            $this->Controller->redirect($redirectUrl);
         }
     }
 
@@ -185,32 +173,27 @@ class PayPalComponent extends Component
 
     /**
      *
-     * @param type $amount
+     * @param type $amountInCents
      * @return type amount plus neutralization amount so when PayPal subtract it's fee
      * the intended amount will be received.
      * @throws InvalidArgumentException if PayPal conditions are not set in config
      */
-    public static function NeutralizeFee($amount)
+    public static function NeutralizeFee($amountInCents)
     {
         $conditions = self::_getConditionsFromConfig();
-        return $amount + ceil(self::CalculateFee($amount) / ( 1 - $conditions['fee_relative'] ));
+        return $amountInCents + ceil(self::CalculateFee($amountInCents) / ( 1 - $conditions['fee_relative'] ));
     }
 
     private static function _getConditionsFromConfig()
     {
-        $config = Configure::read('PayPalPlugin');
+        $config = Configure::read('PayPal');
         if (empty($config['conditions']))
-            throw new InvalidArgumentException('Missing PayPal conditions.');
+            throw new \InvalidArgumentException('Missing PayPal conditions.');
 
         $conditions = $config['conditions'];
         if (!isset($conditions['fee']) || !isset($conditions['fee_relative']))
-            throw new InvalidArgumentException('Missing PayPal condition fees.');
+            throw new \InvalidArgumentException('Missing PayPal condition fees.');
 
         return $conditions;
     }
-}
-
-class PayPalPaymentRedirectException extends Exception
-{
-    public $errors;
 }

@@ -123,7 +123,7 @@ class PayPalPaymentsTable extends Table
             $this, ['RemittanceIdentifier' => $remittanceIdentifier, 'Handled' => &$handled] );
         $this->getEventManager()->dispatch($event);
         if (!$handled)
-            throw new PayPalCallbackException('beforePayPalPaymentExecution did not return true');
+            throw new PayPalCallbackException('PayPal.Model.PayPalPayments.BeforePaymentExecution was not properly handled');
 
         $event = null;
         try

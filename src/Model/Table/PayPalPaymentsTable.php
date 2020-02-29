@@ -69,7 +69,7 @@ class PayPalPaymentsTable extends Table
                 $record->sale_state = $sale->getState();
             }
         }
-        return $this->save($record);
+        return $this->saveOrFail($record);
     }
 
     /**
@@ -80,14 +80,11 @@ class PayPalPaymentsTable extends Table
      */
     public function createPayment($remittanceIdentifier, &$payment, $okUrl, $cancelUrl)
     {
-        $config = Configure::read('PayPalPlugin');
-
         return $this->getConnection()->transactional(function () use ($remittanceIdentifier, &$payment, $okUrl, $cancelUrl) {
             $record = new \Cake\ORM\Entity();
             $record->remittance_identifier = $remittanceIdentifier;
 
-            if (!$this->save($record))
-                return false;
+            $this->saveOrFail($record);
 
             $id = $record->id;
 

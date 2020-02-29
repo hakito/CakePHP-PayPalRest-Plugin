@@ -34,14 +34,6 @@ class PayPalComponentTest extends TestCase
 
         $this->items = new \ReflectionProperty(PayPalComponent::class, 'items');
         $this->items->setAccessible(true);
-
-        // $event = new Event('Controller.startup', $this->Controller);
-        // $this->Eps->startup($event);
-
-        // Plugin::$SoCommunicator = $this->getMockBuilder('at\externet\eps_bank_transfer\SoCommunicator')
-        //     ->getMock();
-        // Plugin::$EnableLogging = false;
-        // Cache::clear();
     }
 
     public function testInitialized()

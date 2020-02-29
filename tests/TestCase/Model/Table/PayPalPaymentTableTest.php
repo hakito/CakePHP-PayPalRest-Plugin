@@ -214,4 +214,22 @@ class PayPalPaymentTableTest extends TestCase
 
         $model->execute(1);
     }
+
+    public function testGetRelatedResources()
+    {
+        $class = new \ReflectionClass(PayPalPaymentsTable::class);
+        $method = $class->getMethod('getRelatedResources');
+        $method->setAccessible(true);
+
+        $transaction = new \PayPal\Api\Transaction();
+        $rr = new RelatedResources();
+        $transaction->setRelatedResources($rr);
+        $transactions = [$transaction];
+        $actual = $method->invokeArgs(null, [$transactions]);
+
+        $this->assertEquals($rr, $actual);
+        $transaction->setRelatedResources([$rr]);
+        $actual = $method->invokeArgs(null, [$transactions]);
+        $this->assertEquals($rr, $actual);
+    }
 }

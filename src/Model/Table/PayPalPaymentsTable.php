@@ -24,7 +24,7 @@ class PayPalPaymentsTable extends Table
      * @param type $transactions
      * @return \PayPal\Api\RelatedResources
      */
-    protected function getRelatedResources($transactions)
+    protected static function getRelatedResources($transactions)
     {
         $relatedResources = $transactions[0]->getRelatedResources();
         return is_array($relatedResources) ? $relatedResources[0] : $relatedResources;

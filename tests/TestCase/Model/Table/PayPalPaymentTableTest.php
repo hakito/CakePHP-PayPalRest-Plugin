@@ -226,12 +226,41 @@ class PayPalPaymentTableTest extends TestCase
         $rr = new RelatedResources();
         $transaction->setRelatedResources($rr);
         $transactions = [$transaction];
-        $obj = new PayPalPaymentsTable();
-        $actual = $method->invokeArgs($obj, [$transactions]);
+        $actual = $method->invokeArgs($this->PayPalPayments, [$transactions]);
 
         $this->assertEquals($rr, $actual);
         $transaction->setRelatedResources([$rr]);
-        $actual = $method->invokeArgs($obj, [$transactions]);
+        $actual = $method->invokeArgs($this->PayPalPayments, [$transactions]);
         $this->assertEquals($rr, $actual);
+    }
+
+    public function testGetEncryptedUrl()
+    {
+        $actual = $this->PayPalPayments->encryptRedirectUrl('foo', 123);
+        $this->assertEquals('Ih8v3dAtnRlCpRvKlD0NEg,,', $actual);
+    }
+
+    public function testDecryptUrl()
+    {
+        $actual = $this->PayPalPayments->decryptRedirectUrl('Ih8v3dAtnRlCpRvKlD0NEg,,', 123);
+        $this->assertEquals('foo', $actual);
+    }
+
+    public function testBase64UrlEncode()
+    {
+        $plus = chr(0x3e << 2);
+        $slash = chr(0x3f);
+        $value = "$plus\x0$slash\o\x3Fo";
+        $actual = $this->PayPalPayments->base64_url_encode($value);
+        $this->assertEquals('-AA_XG8_bw,,', $actual);
+    }
+
+    public function testBase64UrlDecode()
+    {
+        $plus = chr(0x3e << 2);
+        $slash = chr(0x3f);
+        $value = "$plus\x0$slash\o\x3Fo";
+        $actual = $this->PayPalPayments->base64_url_decode('-AA_XG8_bw,,');
+        $this->assertEquals($value, $actual);
     }
 }

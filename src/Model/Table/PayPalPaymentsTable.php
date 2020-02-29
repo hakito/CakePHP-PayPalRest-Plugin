@@ -164,31 +164,33 @@ class PayPalPaymentsTable extends Table
         return $this->savePayment($ppp);
     }
 
-    public function setNextCheck($seconds = 0)
+    public static function setNextCheck($seconds = 0)
     {
         $newTime = time() + $seconds;
-        $storedTime = $this->getStoredTime();
+        $storedTime = self::getStoredTime();
         if ($newTime < $storedTime)
         {
-            return $this->setStoredTime($newTime);
+            return self::setStoredTime($newTime);
         }
         return false;
     }
 
-    public function getStoredTime()
+    public static function getStoredTime()
     {
-        $config = Configure::read('PayPalPlugin');
+        $config = Configure::read('PayPal');
         $filename = $config['checkFile'];
         if (!file_exists($filename))
         {
             file_put_contents($filename, 0);
             return 0;
         }
+
+        return file_get_contents($filename);
     }
 
-    public function setStoredTime($time)
+    public static function setStoredTime($time)
     {
-        $config = Configure::read('PayPalPlugin');
+        $config = Configure::read('PayPal');
         $filename = $config['checkFile'];
         return file_put_contents($filename, $time);
     }

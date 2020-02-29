@@ -2,6 +2,7 @@
 
 namespace PayPal\Test\TestCase\Model\Table;
 
+use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
 
@@ -231,5 +232,29 @@ class PayPalPaymentTableTest extends TestCase
         $transaction->setRelatedResources([$rr]);
         $actual = $method->invokeArgs(null, [$transactions]);
         $this->assertEquals($rr, $actual);
+    }
+
+    public function testStoredTime()
+    {
+        PayPalPaymentsTable::setStoredTime(1);
+        $actual = PayPalPaymentsTable::getStoredTime();
+        $this->assertEquals(1, $actual);
+
+        $checkFile = Configure::read('PayPal')['checkFile'];
+        unlink($checkFile);
+        $actual = PayPalPaymentsTable::getStoredTime();
+        $this->assertEquals(0, $acutal);
+        $this->assertTrue(file_exists($checkFile));
+    }
+
+    public function testSetNextCheck()
+    {
+        $t = time();
+
+        PayPalPaymentsTable::setStoredTime(0);
+        $this->assertFalse(PayPalPaymentsTable::setNextCheck());
+        PayPalPaymentsTable::setStoredTime($t + 100);
+        // LOOKS wrong
+        $this->assertTrue(PayPalPaymentsTable::setNextCheck() != false);
     }
 }

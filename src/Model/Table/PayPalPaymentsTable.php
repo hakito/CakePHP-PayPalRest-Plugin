@@ -24,7 +24,7 @@ class PayPalPaymentsTable extends Table
      * @param type $transactions
      * @return \PayPal\Api\RelatedResources
      */
-    protected static function getRelatedResources($transactions)
+    protected function getRelatedResources($transactions)
     {
         $relatedResources = $transactions[0]->getRelatedResources();
         return is_array($relatedResources) ? $relatedResources[0] : $relatedResources;
@@ -162,37 +162,6 @@ class PayPalPaymentsTable extends Table
         $ppp = $this->ApiGet($payment->payment_id);
 
         return $this->savePayment($ppp);
-    }
-
-    public static function setNextCheck($seconds = 0)
-    {
-        $newTime = time() + $seconds;
-        $storedTime = self::getStoredTime();
-        if ($newTime < $storedTime)
-        {
-            return self::setStoredTime($newTime);
-        }
-        return false;
-    }
-
-    public static function getStoredTime()
-    {
-        $config = Configure::read('PayPal');
-        $filename = $config['checkFile'];
-        if (!file_exists($filename))
-        {
-            file_put_contents($filename, 0);
-            return 0;
-        }
-
-        return file_get_contents($filename);
-    }
-
-    public static function setStoredTime($time)
-    {
-        $config = Configure::read('PayPal');
-        $filename = $config['checkFile'];
-        return file_put_contents($filename, $time);
     }
 
     public function encryptRedirectUrl($text, $id)

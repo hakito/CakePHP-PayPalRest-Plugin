@@ -68,9 +68,6 @@ class PaymentNotificationsControllerTest extends TestCase
             ->method('execute')
             ->with('815');
 
-        $this->model->expects($this->once())
-            ->method('setNextCheck');
-
         $this->get('/PayPalPayment/Execute/815/1/redirectUrl');
     }
 

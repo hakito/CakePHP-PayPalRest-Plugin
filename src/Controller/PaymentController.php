@@ -33,8 +33,6 @@ class PaymentController extends AppController
         if ($success == '1')
             $this->PayPalPayments->execute($id);
 
-        $this->PayPalPayments->setNextCheck();
-
         $uri = new Uri($redirectUrl);
 
         $query = \http_build_query($this->request->getQueryParams());

@@ -226,35 +226,12 @@ class PayPalPaymentTableTest extends TestCase
         $rr = new RelatedResources();
         $transaction->setRelatedResources($rr);
         $transactions = [$transaction];
-        $actual = $method->invokeArgs(null, [$transactions]);
+        $obj = new PayPalPaymentsTable();
+        $actual = $method->invokeArgs($obj, [$transactions]);
 
         $this->assertEquals($rr, $actual);
         $transaction->setRelatedResources([$rr]);
-        $actual = $method->invokeArgs(null, [$transactions]);
+        $actual = $method->invokeArgs($obj, [$transactions]);
         $this->assertEquals($rr, $actual);
-    }
-
-    public function testStoredTime()
-    {
-        PayPalPaymentsTable::setStoredTime(1);
-        $actual = PayPalPaymentsTable::getStoredTime();
-        $this->assertEquals(1, $actual);
-
-        $checkFile = Configure::read('PayPal')['checkFile'];
-        unlink($checkFile);
-        $actual = PayPalPaymentsTable::getStoredTime();
-        $this->assertEquals(0, $acutal);
-        $this->assertTrue(file_exists($checkFile));
-    }
-
-    public function testSetNextCheck()
-    {
-        $t = time();
-
-        PayPalPaymentsTable::setStoredTime(0);
-        $this->assertFalse(PayPalPaymentsTable::setNextCheck());
-        PayPalPaymentsTable::setStoredTime($t + 100);
-        // LOOKS wrong
-        $this->assertTrue(PayPalPaymentsTable::setNextCheck() != false);
     }
 }

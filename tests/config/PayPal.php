@@ -3,7 +3,6 @@ return [
     'PayPal' => [
         'currency' => 'EUR',
         'tax' => '0.2',
-        'checkFile' => TMP . 'next_paypal_check.txt',
         'liveCredentials' => [
             'ClientId' => 'clientId',    // client id obtained from the developer portal
             'ClientSecret' => 'clientSecret' // client secret obtained from the developer portal

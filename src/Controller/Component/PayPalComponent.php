@@ -109,7 +109,7 @@ class PayPalComponent extends Component
 
         $payment = new Payment();
         $payment->setPayer($payer);
-        $payment->setTransactions(array($transaction));
+        $payment->setTransactions([$transaction]);
         $payment->setIntent('sale');
 
         $this->PayPalPayments->createPayment($remittanceIdentifier, $payment, $okUrl, $cancelUrl);

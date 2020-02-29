@@ -87,10 +87,17 @@ class PayPalComponentTest extends TestCase
 
     public function testPaymentRedirect()
     {
+        $this->PayPal->AddArticle('foo', 2, 1234, 'bar');
+        $this->PayPal->Shipping = 100;
+
         $this->PayPal->PayPalPayments = $this->getMockForModel('PayPal.PayPalPayments');
+
         $this->PayPal->PayPalPayments->expects($this->once())
             ->method('createPayment')
-            ->with('ri', $this->anything(), 'https://ok', 'https://cancel')
+            ->with('ri', $this->callback(function($payment) {
+                $this->assertEquals(29.62 + 1, $payment->getTransactions()[0]->getAmount()->getTotal());
+                return true;
+            }), 'https://ok', 'https://cancel')
             ->will($this->returnCallback(function($remittanceIdentifier, $payment, $okUrl, $cancelUrl){
                 $links = new \PayPal\Api\Links();
                 $links

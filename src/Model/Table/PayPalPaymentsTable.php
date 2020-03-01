@@ -47,7 +47,7 @@ class PayPalPaymentsTable extends Table
 
         if (empty($record))
         {
-            $record = new \Cake\ORM\Entity();
+            $record = $this->newEntity(['payment_id' => $paymentId]);
         }
 
         if (empty($record->payment_id))
@@ -81,8 +81,9 @@ class PayPalPaymentsTable extends Table
     public function createPayment($remittanceIdentifier, &$payment, $okUrl, $cancelUrl)
     {
         return $this->getConnection()->transactional(function () use ($remittanceIdentifier, &$payment, $okUrl, $cancelUrl) {
-            $record = new \Cake\ORM\Entity();
-            $record->remittance_identifier = $remittanceIdentifier;
+            $record = $this->newEntity([
+                'remittance_identifier' => $remittanceIdentifier
+            ]);
 
             $this->saveOrFail($record);
 

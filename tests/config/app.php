@@ -80,5 +80,7 @@ return
 
     ],
 
-    'Security.salt' => 'DO NOT USE THIS KEY IN PRODUCTION ENVIRONMENT'
+    'Security' => [
+        'salt' => 'DO NOT USE THIS KEY IN PRODUCTION ENVIRONMENT'
+    ]
 ];

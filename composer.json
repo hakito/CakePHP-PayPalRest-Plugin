@@ -1,7 +1,7 @@
 {
 	"name": "hakito/cakephp-paypal-rest-plugin",
 	"type": "cakephp-plugin",
-        "description": "PayPal plugin for CakePHP using the REST api",
+    "description": "PayPal plugin for CakePHP using the REST api",
 	"homepage": "https://github.com/hakito/CakePHP-PayPalRest-Plugin",
     "keywords": ["paypal", "rest", "cakephp", "payment"],
     "license": "GPL-2.0",

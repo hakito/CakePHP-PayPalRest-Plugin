@@ -3,10 +3,6 @@ namespace PayPal\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
 
-/**
- * CategoriesFixture
- *
- */
 class PayPalPaymentsFixture extends TestFixture
 {
 
@@ -22,7 +18,6 @@ class PayPalPaymentsFixture extends TestFixture
      *
      * @var array
      */
-    // @codingStandardsIgnoreStart
     public $fields = [
         'id' => ['type' => 'integer', 'length' => 10, 'unsigned' => true, 'null' => false, 'default' => null, 'comment' => '', 'autoIncrement' => true, 'precision' => null],
         // 'created' => ['type' => 'datetime', 'length' => null, 'null' => false, 'default' => null, 'comment' => '', 'precision' => null],
@@ -48,7 +43,6 @@ class PayPalPaymentsFixture extends TestFixture
             //'collation' => 'utf8_general_ci'
         ],
     ];
-    // @codingStandardsIgnoreEnd
 
     /**
      * Records

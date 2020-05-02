@@ -16,27 +16,13 @@ If you are using composer simply add it with:
 composer require hakito/cakephp-paypal-rest-plugin
 ```
 
-Model
------
+Creating tables
+---------------
 
-Add the following table to your database.
+Create the database PayPalPayments table with the following command:
 
-```sql
-CREATE TABLE IF NOT EXISTS `PayPalPayments` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `created` datetime NOT NULL,
-  `updated` datetime NOT NULL,
-  `payment_id` varchar(50) DEFAULT NULL,
-  `payment_state` enum('created','approved','failed','canceled','expired','pending') DEFAULT NULL,
-  `sale_state` enum('pending','completed','refunded','partially_refunded') DEFAULT NULL,
-  `remittance_identifier` varchar(100) NOT NULL,
-  `remitted_moment` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `payment_id` (`payment_id`),
-  KEY `sale_state` (`sale_state`,`remitted_moment`),
-  KEY `payment_state` (`payment_state`),
-  KEY `payment_state_2` (`payment_state`,`sale_state`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+```bash
+bin/cake migrations migrate -p PayPal
 ```
 
 Configuration

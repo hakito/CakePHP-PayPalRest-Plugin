@@ -80,7 +80,7 @@ $eventManager->setEventList(new EventList());
 
 // Will be called just after PayPal redirects the customer
 // back to your site. (You could start a transaction here)
-$eventManager->on('PayPal.Model.PayPalPayments.BeforePaymentExecution',
+$eventManager->on('PayPal.BeforePaymentExecution',
 function($event, $remittanceIdentifier, &$handled)
 {
     // Handled is expected to be set to TRUE, otherwise the plugin
@@ -91,13 +91,13 @@ function($event, $remittanceIdentifier, &$handled)
 // Will be called when the REST api call fails or
 // the saleState != 'completed' or paymentState != 'approved'
 // (You could rollback a transaction here)
-$eventManager->on('PayPal.Model.PayPalPayments.CancelPaymentExecution',
+$eventManager->on('PayPal.CancelPaymentExecution',
 function($event, $remittanceIdentifier) {});
 
 // Will be called after the REST api call
 // and only if the saleState == 'completed' and paymentState == 'approved'
 // (You could commit a transaction here)
-$eventManager->on('PayPal.Model.PayPalPayments.AfterPaymentExecution',
+$eventManager->on('PayPal.AfterPaymentExecution',
 function($event, $remittanceIdentifier) {});
 
 ```

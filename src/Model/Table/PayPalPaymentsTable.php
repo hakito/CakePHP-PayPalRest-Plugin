@@ -117,11 +117,11 @@ class PayPalPaymentsTable extends Table
         $execution = new PaymentExecution();
         $execution->setPayerId($_GET['PayerID']);
         $handled = false;
-        $event = new Event('PayPal.Model.PayPalPayments.BeforePaymentExecution',
+        $event = new Event('PayPal.BeforePaymentExecution',
             $this, ['RemittanceIdentifier' => $remittanceIdentifier, 'Handled' => &$handled] );
         $this->getEventManager()->dispatch($event);
         if (!$handled)
-            throw new PayPalCallbackException('PayPal.Model.PayPalPayments.BeforePaymentExecution was not properly handled');
+            throw new PayPalCallbackException('PayPal.BeforePaymentExecution was not properly handled');
 
         $event = null;
         try
@@ -133,13 +133,13 @@ class PayPalPaymentsTable extends Table
             $sale = $relatedResources->getSale();
             $saleState = $sale->getState();
             if ($saleState == 'completed' && $paymentState == 'approved')
-                $event = new Event('PayPal.Model.PayPalPayments.AfterPaymentExecution',
+                $event = new Event('PayPal.AfterPaymentExecution',
                     $this, ['RemittanceIdentifier' => $remittanceIdentifier]);
         }
         finally
         {
             if ($event == null)
-                $event = new Event('PayPal.Model.PayPalPayments.CancelPaymentExecution',
+                $event = new Event('PayPal.CancelPaymentExecution',
                     $this, ['RemittanceIdentifier' => $remittanceIdentifier]);
 
             $this->getEventManager()->dispatch($event);

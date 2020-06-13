@@ -116,11 +116,12 @@ class PayPalPaymentsTable extends Table
 
         $execution = new PaymentExecution();
         $execution->setPayerId($_GET['PayerID']);
-        $handled = false;
         $event = new Event('PayPal.BeforePaymentExecution',
-            $this, ['RemittanceIdentifier' => $remittanceIdentifier, 'Handled' => &$handled] );
+            $this, ['RemittanceIdentifier' => $remittanceIdentifier] );
         $this->getEventManager()->dispatch($event);
-        if (!$handled)
+
+        $result = $event->getResult();
+        if (empty($result['handled']))
             throw new PayPalCallbackException('PayPal.BeforePaymentExecution was not properly handled');
 
         $event = null;

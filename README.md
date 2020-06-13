@@ -81,11 +81,11 @@ $eventManager->setEventList(new EventList());
 // Will be called just after PayPal redirects the customer
 // back to your site. (You could start a transaction here)
 $eventManager->on('PayPal.BeforePaymentExecution',
-function($event, $remittanceIdentifier, &$handled)
+function($event, $remittanceIdentifier)
 {
     // Handled is expected to be set to TRUE, otherwise the plugin
     // will throw an exception
-    $handled = true;
+    return ['handled' => true];
 });
 
 // Will be called when the REST api call fails or

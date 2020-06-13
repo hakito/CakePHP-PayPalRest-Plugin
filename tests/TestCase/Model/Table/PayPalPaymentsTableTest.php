@@ -203,9 +203,9 @@ class PayPalPaymentsTableTest extends TestCase
             ->willReturn($rr);
 
         $model->getEventManager()->on('PayPal.BeforePaymentExecution',
-        function($event, $remittanceIdentifier, &$handled)
+        function($event, $remittanceIdentifier)
         {
-            $handled = true;
+            return ['handled' => true];
         });
 
         $p->expects($this->once())
@@ -264,9 +264,9 @@ class PayPalPaymentsTableTest extends TestCase
             ->with('PayPalId')
             ->willReturn($p);
         $model->getEventManager()->on('PayPal.BeforePaymentExecution',
-        function($event, $remittanceIdentifier, &$handled)
+        function($event, $remittanceIdentifier)
         {
-            $handled = true;
+            return ['handled' => true];
         });
 
         try {

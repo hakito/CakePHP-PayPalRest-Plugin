@@ -127,7 +127,7 @@ class PayPalPaymentsTable extends Table
         $event = null;
         try
         {
-            $ppRes = $ppReq->execute($execution);
+            $ppRes = $ppReq->execute($execution, $apiContext);
             $paymentState = $ppRes->getState();
             $transactions = $ppRes->getTransactions();
             $relatedResources = $this->getRelatedResources($transactions);

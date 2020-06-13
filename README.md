@@ -2,13 +2,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/hakito/CakePHP-PayPalRest-Plugin/badge.svg?branch=master)](https://coveralls.io/github/hakito/CakePHP-PayPalRest-Plugin?branch=master)
 [![Latest Stable Version](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/v/stable.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![Total Downloads](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/downloads.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![Latest Unstable Version](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/v/unstable.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![License](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/license.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin)
 
-CakePHP-PayPalRest-Plugin
-=========================
+# CakePHP-PayPalRest-Plugin
 
 Simple PayPal plugin for CakePHP using the REST api.
 
-Installation
-------------
+## Installation
 
 If you are using composer simply add it with:
 
@@ -16,8 +14,21 @@ If you are using composer simply add it with:
 composer require hakito/cakephp-paypal-rest-plugin
 ```
 
-Creating tables
----------------
+## Load the plugin
+
+Load the plugin in your bootstrap:
+
+```php
+public function bootstrap()
+{
+    // Call parent to load bootstrap from files.
+    parent::bootstrap();
+
+    $this->addPlugin(\PayPal\Plugin::class, ['routes' => true]);
+}
+```
+
+## Creating tables
 
 Create the database PayPalPayments table with the following command:
 
@@ -25,13 +36,11 @@ Create the database PayPalPayments table with the following command:
 bin/cake migrations migrate -p PayPal
 ```
 
-Configuration
--------------
+## Configuration
 
 You can find a sample configuration in tests/config/PayPal.php. Just override the settings in your own bootstrap.php.
 
-Usage
------
+## Usage
 
 Following is the minimal set to start a payment request:
 
@@ -102,7 +111,6 @@ function($event, $remittanceIdentifier) {});
 
 ```
 
-Remarks
--------
+## Remarks
 
 The current implementation does not support automatic handling payments in pending state.

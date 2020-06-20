@@ -294,6 +294,10 @@ class PayPalPaymentsTableTest extends TestCase
         $transaction->setRelatedResources([$rr]);
         $actual = $method->invokeArgs($this->PayPalPayments, [$transactions]);
         $this->assertEquals($rr, $actual);
+
+        $transaction->setRelatedResources([]);
+        $actual = $method->invokeArgs($this->PayPalPayments, [$transactions]);
+        $this->assertNull($actual);
     }
 
     public function testEncryptionRoundTrip()

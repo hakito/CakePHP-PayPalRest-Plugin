@@ -29,7 +29,13 @@ class PayPalPaymentsTable extends Table
     protected function getRelatedResources($transactions)
     {
         $relatedResources = $transactions[0]->getRelatedResources();
-        return is_array($relatedResources) ? $relatedResources[0] : $relatedResources;
+        if (is_array($relatedResources))
+        {
+            if (sizeof($relatedResources) == 0)
+                return null;
+            return $relatedResources[0];
+        }
+        return $relatedResources;
     }
 
     /**
@@ -199,6 +205,13 @@ class PayPalPaymentsTable extends Table
     protected function ApiGet($paymentId)
     {
         return \PayPal\Api\Payment::get($paymentId, self::getApiContext());
+    }
+
+    private static function getCredentials()
+    {
+        $config = Configure::read('PayPal');
+        $mode = $config['rest-api']['mode'];
+        return $config[$mode . 'Credentials'];
     }
 }
 

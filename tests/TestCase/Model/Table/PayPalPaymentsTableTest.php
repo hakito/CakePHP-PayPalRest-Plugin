@@ -296,15 +296,11 @@ class PayPalPaymentsTableTest extends TestCase
         $this->assertEquals($rr, $actual);
     }
 
-    public function testGetEncryptedUrl()
+    public function testEncryptionRoundTrip()
     {
-        $actual = $this->PayPalPayments->encryptRedirectUrl('foo', 123);
-        $this->assertEquals('Ih8v3dAtnRlCpRvKlD0NEg,,', $actual);
-    }
-
-    public function testDecryptUrl()
-    {
-        $actual = $this->PayPalPayments->decryptRedirectUrl('Ih8v3dAtnRlCpRvKlD0NEg,,', 123);
+        // encrypt with sandbox credentials
+        $encrypted = $this->PayPalPayments->encryptRedirectUrl('foo', 123);
+        $actual = $this->PayPalPayments->decryptRedirectUrl($encrypted, 123);
         $this->assertEquals('foo', $actual);
     }
 

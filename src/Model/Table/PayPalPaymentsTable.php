@@ -6,6 +6,7 @@ use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Routing\Router;
+use Cake\Utility\Security;
 
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
@@ -152,8 +153,7 @@ class PayPalPaymentsTable extends Table
     public static function getApiContext()
     {
         $config = Configure::read('PayPal');
-        $mode = $config['rest-api']['mode'];
-        $credentials = $config[$mode . 'Credentials'];
+        $credentials = self::getCredentials();
         $apiContext = new ApiContext(new OAuthTokenCredential($credentials['ClientId'], $credentials['ClientSecret']));
         $apiContext->setConfig($config['rest-api']);
         return $apiContext;
@@ -172,18 +172,17 @@ class PayPalPaymentsTable extends Table
 
     public function encryptRedirectUrl($text, $id)
     {
-        $password = substr(Configure::read('Security.salt'), 0, 10) . $id;
-		$vi = substr(Configure::read('Security.salt'), -16);
+        $credentials = self::getCredentials();
         $compressed = gzcompress($text, 9);
-        return $this->base64_url_encode(openssl_encrypt($compressed, 'aes128', $password, true, $vi)) ;
+        $key = $credentials['ClientSecret'] . $id;
+        return $this->base64_url_encode(Security::encrypt($compressed, $key)) ;
     }
 
     public function decryptRedirectUrl($encryptedText, $id)
     {
-        $password = substr(Configure::read('Security.salt'), 0, 10) . $id;
-		$vi = substr(Configure::read('Security.salt'), -16);
-
-        $compressed = openssl_decrypt($this->base64_url_decode($encryptedText), 'aes128', $password, true, $vi);
+        $credentials = self::getCredentials();
+        $key = $credentials['ClientSecret'] . $id;
+        $compressed = Security::decrypt($this->base64_url_decode($encryptedText), $key);
         return gzuncompress($compressed);
     }
 

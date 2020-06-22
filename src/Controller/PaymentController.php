@@ -3,13 +3,12 @@
 namespace PayPal\Controller;
 
 use Cake\Http\Exception\NotFoundException;
-
-use Zend\Diactoros\Uri;
+use Laminas\Diactoros\UriFactory;
 
 class PaymentController extends AppController
 {
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -33,7 +32,8 @@ class PaymentController extends AppController
         if ($success == '1')
             $this->PayPalPayments->execute($id);
 
-        $uri = new Uri($redirectUrl);
+        $factory = new UriFactory();
+        $uri = $factory->createUri($redirectUrl);
 
         $query = \http_build_query($this->request->getQueryParams());
 

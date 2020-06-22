@@ -2,15 +2,15 @@
 
 namespace PayPal\Test\TestCase\Model\Table;
 
-use Cake\Core\Configure;
 use Cake\Event\EventList;
+use Cake\Event\EventManager;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-
 use PayPal\Api\Payment;
 use PayPal\Api\RelatedResources;
 use PayPal\Api\Sale;
 use PayPal\Model\Table\PayPalPaymentsTable;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @var \PayPal\Model\Table\PayPalPaymentTable PayPalPayment
@@ -19,7 +19,7 @@ class PayPalPaymentsTableTest extends TestCase
 {
     public $fixtures = ['plugin.PayPal.PayPalPayments'];
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->PayPalPayments = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments');
@@ -142,6 +142,7 @@ class PayPalPaymentsTableTest extends TestCase
 
     public function testCreatePayment()
     {
+        /** @var MockObject|Payment */
         $p = $this->getMockBuilder(Payment::class)
             ->setMethods(['create'])
             ->getMock();
@@ -180,8 +181,11 @@ class PayPalPaymentsTableTest extends TestCase
             'getRelatedResources',
         ]);
 
-        $model->getEventManager()->setEventList(new EventList());
+        /** @var EventManager */
+        $eventManager = $model->getEventManager();
+        $eventManager->setEventList(new EventList());
 
+        /** @var MockObject|Payment */
         $p = $this->getMockBuilder(Payment::class)
             ->setMethods(['execute'])
             ->getMock();
@@ -249,8 +253,11 @@ class PayPalPaymentsTableTest extends TestCase
             'ApiGet'
         ]);
 
-        $model->getEventManager()->setEventList(new EventList());
+        /** @var EventManager */
+        $eventManager = $model->getEventManager();
+        $eventManager->setEventList(new EventList());
 
+        /** @var MockObject|Payment */
         $p = $this->getMockBuilder(Payment::class)
             ->setMethods(['execute'])
             ->getMock();

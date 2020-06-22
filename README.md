@@ -4,7 +4,7 @@
 
 # CakePHP-PayPalRest-Plugin
 
-Simple PayPal plugin for CakePHP 3.x using the REST api.
+Simple PayPal plugin for CakePHP 4.x using the REST api.
 
 ## Installation
 

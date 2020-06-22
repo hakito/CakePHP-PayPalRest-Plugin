@@ -3,9 +3,6 @@ namespace PayPal\Test\TestCase\Controller;
 
 use Cake\TestSuite\TestCase;
 use Cake\TestSuite\IntegrationTestTrait;
-use PayPal\Test\TestApp\Application;
-
-use PayPal\PaymentController;
 
 class PaymentNotificationsControllerTest extends TestCase
 {
@@ -13,8 +10,9 @@ class PaymentNotificationsControllerTest extends TestCase
 
     public $fixtures = ['plugin.PayPal.PayPalPayments'];
 
-    public function setUp()
+    public function setUp(): void
     {
+        parent::setUp();
         $this->disableErrorHandlerMiddleware();
         $this->model = $this->getMockBuilder(\PayPal\Model\Table\PayPalPaymentsTable::class)
             ->disableOriginalConstructor()

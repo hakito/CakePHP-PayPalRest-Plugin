@@ -44,9 +44,11 @@ use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\Configure\Engine\PhpConfig;
 use Cake\Datasource\ConnectionManager;
+use Cake\Utility\Security;
 
 Configure::config('default', new PhpConfig());
 Configure::load('app', 'default', false);
 Configure::load('PayPal', 'default', false);
 Cache::setConfig(Configure::consume('Cache'));
 ConnectionManager::setConfig('test', Configure::consume('Datasources.test'));
+Security::setSalt(Configure::consume('Security.salt'));

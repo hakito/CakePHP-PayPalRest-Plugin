@@ -2,7 +2,6 @@
 
 namespace PayPal\Test\TestCase\Controller\Component;
 
-use Cake\Cache\Cache;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
 use Cake\Event\Event;
@@ -18,7 +17,7 @@ use PayPal\Model\Table\PayPalPaymentsTable;
 class PayPalComponentTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -68,7 +67,7 @@ class PayPalComponentTest extends TestCase
 
     public function testPaymentRedirectCreatePaymentFails()
     {
-        $this->PayPal->PayPalPayments = $this->getMockForModel('PayPal.PayPalPayments');
+        $this->PayPal->PayPalPayments = $this->getMockForModel('PayPal.PayPalPayments', ['createPayment']);
         $this->PayPal->PayPalPayments->expects($this->once())
             ->method('createPayment')
             ->with('ri', $this->anything(), 'https://ok', 'https://cancel')
@@ -82,7 +81,7 @@ class PayPalComponentTest extends TestCase
         $this->PayPal->AddArticle('foo', 2, 1234, 'bar');
         $this->PayPal->Shipping = 100;
 
-        $this->PayPal->PayPalPayments = $this->getMockForModel('PayPal.PayPalPayments');
+        $this->PayPal->PayPalPayments = $this->getMockForModel('PayPal.PayPalPayments', ['createPayment']);
 
         $this->PayPal->PayPalPayments->expects($this->once())
             ->method('createPayment')

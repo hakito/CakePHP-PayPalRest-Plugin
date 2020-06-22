@@ -16,7 +16,7 @@ use PayPal\Api\PaymentExecution;
 class PayPalPaymentsTable extends Table
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->setTable('PayPalPayments');
     }

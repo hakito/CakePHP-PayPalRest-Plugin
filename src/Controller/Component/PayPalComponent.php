@@ -5,13 +5,13 @@ namespace PayPal\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
-
 use PayPal\Api\Amount;
 use PayPal\Api\Payer;
 use PayPal\Api\Payment;
 use PayPal\Api\Transaction;
 use PayPal\Api\ItemList;
 use PayPal\Api\Item;
+use PayPal\Model\Table\PayPalPaymentsTable;
 
 class PayPalComponent extends Component
 {
@@ -25,7 +25,7 @@ class PayPalComponent extends Component
     /** @var PayPalPaymentsTable */
     public $PayPalPayments;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->config = Configure::read('PayPal');

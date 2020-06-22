@@ -13,7 +13,7 @@ Router::plugin(
             [
                 'controller' => 'Payment',
                 'action' => 'execute'
-            ],
+            ]
         )
             ->setPatterns(['id' => '[0-9]+', 'success' => '[01]'])
             ->setPass(['id', 'success', 'redirect']);
@@ -23,7 +23,7 @@ Router::plugin(
             [
                 'controller' => 'Payment',
                 'action' => 'lookup'
-            ],
+            ]
         )
             ->setPatterns(['id' => '[0-9]+'])
             ->setPass(['id']);

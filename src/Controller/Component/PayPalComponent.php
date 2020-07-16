@@ -70,6 +70,17 @@ class PayPalComponent extends Component
     }
 
     /**
+     * @return int|float sum of all item prices (in cents) multilied by quantity
+     */
+    public function GetItemTotal()
+    {
+        $itemSum = 0;
+        foreach($this->items as $item)
+            $itemSum += $item->CentPrice * $item->getQuantity();
+        return $itemSum;
+    }
+
+    /**
      *
      * @param string $remittanceIdentifier id to be used for the callback function
      * @param string $okUrl Redirect URL on successful payment

@@ -6,13 +6,11 @@ use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\TestSuite\TestCase;
-
-
 use PayPal\Controller\Component\PayPalComponent;
 use PayPal\Model\Table\PayPalPaymentsTable;
 
 /**
- * @var PayPalComponent PayPal
+ * @property PayPalComponent $PayPal
  */
 class PayPalComponentTest extends TestCase
 {
@@ -63,6 +61,13 @@ class PayPalComponentTest extends TestCase
         $this->assertEquals(12.34, $items['id']->getPrice());
         $this->assertEquals('EUR', $items['id']->getCurrency());
         $this->assertEquals('id', $items['id']->getSku());
+    }
+
+    public function testGetItemTotal()
+    {
+        $this->PayPal->AddArticle('foo', 3, 1234);
+        $this->PayPal->AddArticle('foo', 5, 567);
+        $this->assertEquals(1234 * 3 + 567 * 5, $this->PayPal->GetItemTotal());
     }
 
     public function testPaymentRedirectCreatePaymentFails()

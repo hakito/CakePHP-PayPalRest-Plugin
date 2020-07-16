@@ -4,7 +4,11 @@ namespace PayPal\Controller\Component;
 
 use Cake\Core\Configure;
 use Cake\Controller\Component;
-use Cake\ORM\TableRegistry;
+use Cake\Datasource\Exception\MissingDatasourceConfigException;
+use Cake\Database\Exception\NestedTransactionRollbackException;
+use Cake\Datasource\FactoryLocator;
+use InvalidArgumentException;
+use Exception;
 use PayPal\Api\Amount;
 use PayPal\Api\Payer;
 use PayPal\Api\Payment;
@@ -12,6 +16,7 @@ use PayPal\Api\Transaction;
 use PayPal\Api\ItemList;
 use PayPal\Api\Item;
 use PayPal\Model\Table\PayPalPaymentsTable;
+use Throwable;
 
 class PayPalComponent extends Component
 {
@@ -30,7 +35,7 @@ class PayPalComponent extends Component
         parent::initialize($config);
         $this->config = Configure::read('PayPal');
         $this->items = [];
-        $this->PayPalPayments = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments');
+        $this->PayPalPayments = FactoryLocator::get('Table')->get('PayPal.PayPalPayments');
     }
 
     public function startup($event)
@@ -67,10 +72,18 @@ class PayPalComponent extends Component
     /**
      *
      * @param string $remittanceIdentifier id to be used for the callback function
-     * @param string Description text for the transaction
-     * @throws \Cake\ORM\Exception\PersistenceFailedException when creation of database entry failed
+     * @param string $okUrl Redirect URL on successful payment
+     * @param string $cancelUrl Redirect URL on user abort
+     * @param string|null $description Optional transaction description
+     * @param int|null $tax Optional tax in cents. Will be calculated based on tax from config if not specified.
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws MissingDatasourceConfigException
+     * @throws Exception
+     * @throws Throwable
+     * @throws NestedTransactionRollbackException
      */
-    public function PaymentRedirect($remittanceIdentifier, $okUrl, $cancelUrl, $description = null)
+    public function PaymentRedirect(string $remittanceIdentifier, string $okUrl, string $cancelUrl, string $description = null, int $tax = null)
     {
         $payer = new Payer();
 
@@ -85,10 +98,13 @@ class PayPalComponent extends Component
             $itemArray[] = $item;
         }
 
-        $taxPercent = $this->config['tax'];
         $amountDetails = new \PayPal\Api\Details();
         $amountDetails->setSubtotal($this->FormatMonetaryDecimal($itemSum));
-        $tax = (int) round($itemSum * $taxPercent);
+        if ($tax == null)
+        {
+            $taxPercent = $this->config['tax'];
+            $tax = (int) round($itemSum * $taxPercent);
+        }
         $amountDetails->setTax($this->FormatMonetaryDecimal($tax));
         $amountDetails->setShipping($this->FormatMonetaryDecimal($this->Shipping));
 

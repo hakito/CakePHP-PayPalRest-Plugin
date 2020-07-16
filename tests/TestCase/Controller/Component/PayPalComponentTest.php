@@ -105,6 +105,35 @@ class PayPalComponentTest extends TestCase
         $this->PayPal->PaymentRedirect('ri', 'https://ok', 'https://cancel', 'descr');
     }
 
+    public function testPaymentRedirectWithTax()
+    {
+        $this->PayPal->AddArticle('foo', 2, 1234, 'bar');
+        $this->PayPal->Shipping = 100;
+
+        $this->PayPal->PayPalPayments = $this->getMockForModel('PayPal.PayPalPayments', ['createPayment']);
+
+        $this->PayPal->PayPalPayments->expects($this->once())
+            ->method('createPayment')
+            ->with('ri', $this->callback(function($payment) {
+                $this->assertEquals(12.34 * 2 + 3.21 + 1, $payment->getTransactions()[0]->getAmount()->getTotal());
+                return true;
+            }), 'https://ok', 'https://cancel')
+            ->will($this->returnCallback(function($remittanceIdentifier, $payment, $okUrl, $cancelUrl){
+                $links = new \PayPal\Api\Links();
+                $links
+                    ->setRel('approval_url')
+                    ->setHref('https://pay');
+                $payment->setLinks([$links]);
+                return true;
+            }));
+
+        $this->Controller->expects($this->once())
+            ->method('redirect')
+            ->with('https://pay');
+
+        $this->PayPal->PaymentRedirect('ri', 'https://ok', 'https://cancel', 'descr', 321);
+    }
+
     public function testNeutralizeFee()
     {
         $actual = PayPalComponent::NeutralizeFee(1234);

@@ -22,7 +22,7 @@ class PayPalPaymentsTableTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->PayPalPayments = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments');
+        $this->PayPalPayments = $this->getTableLocator()->get('PayPal.PayPalPayments');
         $this->PayPalPayments->getEventManager()->setEventList(new EventList());
     }
 

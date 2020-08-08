@@ -181,23 +181,23 @@ class PayPalPaymentsTable extends Table
         $credentials = self::getCredentials();
         $compressed = gzcompress($text, 9);
         $key = $credentials['ClientSecret'] . $id;
-        return $this->base64_url_encode(Security::encrypt($compressed, $key)) ;
+        return self::base64_url_encode(Security::encrypt($compressed, $key)) ;
     }
 
     public function decryptRedirectUrl($encryptedText, $id)
     {
         $credentials = self::getCredentials();
         $key = $credentials['ClientSecret'] . $id;
-        $compressed = Security::decrypt($this->base64_url_decode($encryptedText), $key);
+        $compressed = Security::decrypt(self::base64_url_decode($encryptedText), $key);
         return gzuncompress($compressed);
     }
 
-    public function base64_url_encode($input)
+    public static function base64_url_encode($input)
     {
         return strtr(base64_encode($input) , '+/=', '-_,');
     }
 
-    public function base64_url_decode($input)
+    public static function base64_url_decode($input)
     {
         return base64_decode(strtr($input, '-_,', '+/='));
     }

@@ -320,7 +320,7 @@ class PayPalPaymentsTableTest extends TestCase
         $plus = chr(0x3e << 2);
         $slash = chr(0x3f);
         $value = "$plus\x0$slash\o\x3Fo";
-        $actual = $this->PayPalPayments->base64_url_encode($value);
+        $actual = PayPalPaymentsTable::base64_url_encode($value);
         $this->assertEquals('-AA_XG8_bw,,', $actual);
     }
 
@@ -329,7 +329,7 @@ class PayPalPaymentsTableTest extends TestCase
         $plus = chr(0x3e << 2);
         $slash = chr(0x3f);
         $value = "$plus\x0$slash\o\x3Fo";
-        $actual = $this->PayPalPayments->base64_url_decode('-AA_XG8_bw,,');
+        $actual = PayPalPaymentsTable::base64_url_decode('-AA_XG8_bw,,');
         $this->assertEquals($value, $actual);
     }
 }

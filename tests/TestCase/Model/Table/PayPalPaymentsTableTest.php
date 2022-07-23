@@ -60,6 +60,7 @@ class PayPalPaymentsTableTest extends TestCase
 
     public function testSavePayment()
     {
+        /** @var PayPalPaymentsTable */
         $model = $this->getMockForModel('PayPal.PayPalPayments', ['getRelatedResources']);
 
         $transactions = [new \PayPal\Api\Transaction()];
@@ -72,7 +73,7 @@ class PayPalPaymentsTableTest extends TestCase
         $p->setState('initial');
         $p->setTransactions($transactions);
 
-        $result = $model->savePayment($p);
+        $result = $model->savePayment($p, null, 'myri');
         $this->assertEquals('initial', $result->payment_state);
         $this->assertEquals('A_new_id', $result->payment_id);
     }
@@ -136,7 +137,7 @@ class PayPalPaymentsTableTest extends TestCase
         $p->setId('foo');
         $p->setTransactions($transactions);
 
-        $result = $model->savePayment($p);
+        $result = $model->savePayment($p, null, 'myri');
         $this->assertEquals('done', $result->sale_state);
     }
 
@@ -223,7 +224,7 @@ class PayPalPaymentsTableTest extends TestCase
     {
         $model = $this->prepareExecuteTest();
 
-        $model->execute(1);
+        $model->execute(1, 'payer');
         $this->assertEventFiredWith('PayPal.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
         $this->assertEventFiredWith('PayPal.AfterPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
     }
@@ -232,7 +233,7 @@ class PayPalPaymentsTableTest extends TestCase
     {
         $model = $this->prepareExecuteTest('invalid');
 
-        $model->execute(1);
+        $model->execute(1, 'payer');
         $this->assertEventFiredWith('PayPal.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
         $this->assertEventFiredWith('PayPal.CancelPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
     }
@@ -241,7 +242,7 @@ class PayPalPaymentsTableTest extends TestCase
     {
         $model = $this->prepareExecuteTest('completed', 'invalid');
 
-        $model->execute(1);
+        $model->execute(1, 'payer');
         $this->assertEventFiredWith('PayPal.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
         $this->assertEventFiredWith('PayPal.CancelPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
     }
@@ -277,7 +278,7 @@ class PayPalPaymentsTableTest extends TestCase
         });
 
         try {
-            $model->execute(1);
+            $model->execute(1, 'payer');
         } catch (\Exception $th) {
             $this->assertEquals('dummy', $th->getMessage());
         }

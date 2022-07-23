@@ -30,7 +30,7 @@ public function bootstrap()
 
 ## Creating tables
 
-Create the database PayPalPayments table with the following command:
+Create the database pay_pal_payments table with the following command:
 
 ```bash
 bin/cake migrations migrate -p PayPal

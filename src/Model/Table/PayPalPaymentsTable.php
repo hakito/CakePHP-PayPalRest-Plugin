@@ -18,7 +18,8 @@ class PayPalPaymentsTable extends Table
 
     public function initialize(array $config): void
     {
-        $this->setTable('PayPalPayments');
+        $this->setTable('pay_pal_payments');
+        $this->addBehavior('Timestamp');
     }
 
     /**
@@ -42,7 +43,7 @@ class PayPalPaymentsTable extends Table
      *
      * @param \PayPal\Api\Payment $payment
      */
-    public function savePayment($payment, $id = null)
+    public function savePayment($payment, $id = null, $remittanceIdentifier = null)
     {
         $paymentId = $payment->getId();
 
@@ -54,7 +55,10 @@ class PayPalPaymentsTable extends Table
 
         if (empty($record))
         {
-            $record = $this->newEntity(['payment_id' => $paymentId]);
+            $record = $this->newEntity([
+                'payment_id' => $paymentId,
+                'remittance_identifier' => $remittanceIdentifier
+            ]);
         }
 
         if (empty($record->payment_id))
@@ -106,14 +110,14 @@ class PayPalPaymentsTable extends Table
             $apiContext = self::getApiContext();
             $payment->create($apiContext);
 
-            return $this->savePayment($payment, $id);
+            return $this->savePayment($payment, $id, $remittanceIdentifier);
         });
     }
 
-    public function execute($id)
+    public function execute($id, $payerId)
     {
         $record = $this->findById($id)->first();
-        if (empty($record))
+        if (empty($record) || empty($payerId))
             return false;
 
         $apiContext = self::getApiContext();
@@ -122,7 +126,7 @@ class PayPalPaymentsTable extends Table
         $ppReq = $this->ApiGet($record->payment_id);
 
         $execution = new PaymentExecution();
-        $execution->setPayerId($_GET['PayerID']);
+        $execution->setPayerId($payerId);
         $event = new Event('PayPal.BeforePaymentExecution',
             $this, ['RemittanceIdentifier' => $remittanceIdentifier] );
         $this->getEventManager()->dispatch($event);
@@ -153,7 +157,7 @@ class PayPalPaymentsTable extends Table
             $this->getEventManager()->dispatch($event);
         }
 
-        $this->savePayment($ppRes);
+        $this->savePayment($ppRes, null, $remittanceIdentifier);
     }
 
     public static function getApiContext()

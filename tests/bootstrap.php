@@ -52,3 +52,9 @@ Configure::load('PayPal', 'default', false);
 Cache::setConfig(Configure::consume('Cache'));
 ConnectionManager::setConfig('test', Configure::consume('Datasources.test'));
 Security::setSalt(Configure::consume('Security.salt'));
+
+use Migrations\TestSuite\Migrator;
+$migrator = new Migrator();
+
+// Simple setup for with no plugins
+$migrator->run();

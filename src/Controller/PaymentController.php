@@ -5,6 +5,9 @@ namespace PayPal\Controller;
 use Cake\Http\Exception\NotFoundException;
 use Laminas\Diactoros\UriFactory;
 
+/**
+ * @property \PayPal\Model\Table\PayPalPaymentsTable PayPalPayments
+ */
 class PaymentController extends AppController
 {
 
@@ -30,7 +33,7 @@ class PaymentController extends AppController
             throw new NotFoundException();
 
         if ($success == '1')
-            $this->PayPalPayments->execute($id);
+            $this->PayPalPayments->execute($id, $this->request->getQuery('PayerID'));
 
         $factory = new UriFactory();
         $uri = $factory->createUri($redirectUrl);

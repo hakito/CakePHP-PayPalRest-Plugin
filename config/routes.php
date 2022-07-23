@@ -1,15 +1,14 @@
 <?php
 
 use Cake\Routing\RouteBuilder;
-use Cake\Routing\Router;
 
-Router::plugin(
+$routes->plugin(
     'PayPal',
     ['path' => '/PayPalPayment'],
     function (RouteBuilder $routes)
     {
         /* Add route for handling payment notifications */
-        $routes->get('/Execute/:id/:success/:redirect',
+        $routes->get('/Execute/{id}/{success}/{redirect}',
             [
                 'controller' => 'Payment',
                 'action' => 'execute'
@@ -19,7 +18,7 @@ Router::plugin(
             ->setPass(['id', 'success', 'redirect']);
 
 
-        $routes->get('/Lookup/:id',
+        $routes->get('/Lookup/{id}',
             [
                 'controller' => 'Payment',
                 'action' => 'lookup'

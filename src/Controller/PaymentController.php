@@ -15,7 +15,7 @@ class PaymentController extends AppController
     {
         parent::initialize();
 
-        $this->loadModel('PayPal.PayPalPayments');
+        $this->PayPalPayments = $this->fetchTable('PayPal.PayPalPayments');
     }
 
     /**
@@ -25,7 +25,7 @@ class PaymentController extends AppController
      * @param string $eRedirectUrl encrypted forwarding Url
      * @throws NotFoundException if deccryption of $eRedirectUrl fails
      */
-    public function execute($id, $success, $eRedirectUrl)
+    public function execute(int $id, bool $success, string $eRedirectUrl): void
     {
         $this->autoRender = false;
         $redirectUrl = $this->PayPalPayments->decryptRedirectUrl($eRedirectUrl, $id);
@@ -47,7 +47,7 @@ class PaymentController extends AppController
         $this->redirect(strval($uri));
     }
 
-    public function lookup($id)
+    public function lookup(int $id): void
     {
         $this->autoRender = false;
         $this->PayPalPayments->refreshState($id);

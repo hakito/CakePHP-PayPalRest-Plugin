@@ -7,6 +7,7 @@ use Cake\Controller\Component;
 use Cake\Datasource\Exception\MissingDatasourceConfigException;
 use Cake\Database\Exception\NestedTransactionRollbackException;
 use Cake\Datasource\FactoryLocator;
+use Cake\Event\EventInterface;
 use InvalidArgumentException;
 use Exception;
 use PayPal\Api\Amount;
@@ -38,19 +39,16 @@ class PayPalComponent extends Component
         $this->PayPalPayments = FactoryLocator::get('Table')->get('PayPal.PayPalPayments');
     }
 
-    public function startup($event)
+    public function startup(EventInterface $event)
     {
         $this->Controller = $event->getSubject();
     }
 
     /**
      *
-     * @param string $name
-     * @param int $quantity
      * @param int $price in cents
-     * @param string $id
      */
-    public function AddArticle($name, $quantity, $price, $id = null)
+    public function AddArticle(string $name, int $quantity, int $price, string $id = null)
     {
         $item = new Item();
         $item->setName($name);
@@ -70,9 +68,9 @@ class PayPalComponent extends Component
     }
 
     /**
-     * @return int|float sum of all item prices (in cents) multilied by quantity
+     * @return int sum of all item prices (in cents) multiplied by quantity
      */
-    public function GetItemTotal()
+    public function GetItemTotal(): int
     {
         $itemSum = 0;
         foreach($this->items as $item)
@@ -87,14 +85,13 @@ class PayPalComponent extends Component
      * @param string $cancelUrl Redirect URL on user abort
      * @param string|null $description Optional transaction description
      * @param int|null $tax Optional tax in cents. Will be calculated based on tax from config if not specified.
-     * @return void
      * @throws InvalidArgumentException
      * @throws MissingDatasourceConfigException
      * @throws Exception
      * @throws Throwable
      * @throws NestedTransactionRollbackException
      */
-    public function PaymentRedirect(string $remittanceIdentifier, string $okUrl, string $cancelUrl, string $description = null, int $tax = null)
+    public function PaymentRedirect(string $remittanceIdentifier, string $okUrl, string $cancelUrl, string $description = null, int $tax = null): void
     {
         $payer = new Payer();
 
@@ -156,7 +153,7 @@ class PayPalComponent extends Component
         }
     }
 
-    function FormatMonetaryDecimal($val)
+    private function FormatMonetaryDecimal($val): string
     {
         if (is_string($val))
         {
@@ -188,11 +185,10 @@ class PayPalComponent extends Component
 
     /**
      *
-     * @param type $amount
-     * @return type PayPal fee based on amount
+     * @return int PayPal fee based on amount
      * @throws InvalidArgumentException if PayPal conditions are not set in config
      */
-    public static function CalculateFee($amount)
+    public static function CalculateFee(int $amount): float
     {
         $conditions = self::_getConditionsFromConfig();
         return $amount * $conditions['fee_relative'] + $conditions['fee'];
@@ -200,18 +196,17 @@ class PayPalComponent extends Component
 
     /**
      *
-     * @param type $amountInCents
-     * @return type amount plus neutralization amount so when PayPal subtract it's fee
+     * @return int amount plus neutralization amount so when PayPal subtract it's fee
      * the intended amount will be received.
      * @throws InvalidArgumentException if PayPal conditions are not set in config
      */
-    public static function NeutralizeFee($amountInCents)
+    public static function NeutralizeFee(int $amountInCents): int
     {
         $conditions = self::_getConditionsFromConfig();
         return $amountInCents + ceil(self::CalculateFee($amountInCents) / ( 1 - $conditions['fee_relative'] ));
     }
 
-    private static function _getConditionsFromConfig()
+    private static function _getConditionsFromConfig(): array
     {
         $config = Configure::read('PayPal');
         if (empty($config['conditions']))

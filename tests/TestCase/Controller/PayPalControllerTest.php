@@ -16,7 +16,8 @@ class PaymentNotificationsControllerTest extends TestCase
         $this->disableErrorHandlerMiddleware();
         $this->model = $this->getMockBuilder(\PayPal\Model\Table\PayPalPaymentsTable::class)
             ->disableOriginalConstructor()
-            ->setMethods(['refreshState', 'decryptRedirectUrl', 'execute', 'setNextCheck'])
+            ->onlyMethods(['refreshState', 'decryptRedirectUrl', 'execute'])
+            ->addMethods(['setNextCheck'])
             ->getMock();
         $this->mockModel = true;
     }

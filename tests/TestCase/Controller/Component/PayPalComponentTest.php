@@ -3,6 +3,7 @@
 namespace PayPal\Test\TestCase\Controller\Component;
 
 use Cake\Controller\ComponentRegistry;
+use Cake\Controller\Controller;
 use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\TestSuite\TestCase;
@@ -19,8 +20,9 @@ class PayPalComponentTest extends TestCase
     {
         parent::setUp();
 
+        /** @var Controller */
         $this->Controller = $this->getMockBuilder('\Cake\Controller\Controller')
-            ->setMethods(['redirect'])
+            ->onlyMethods(['redirect'])
             ->getMock();
 
         $registry = new ComponentRegistry($this->Controller);

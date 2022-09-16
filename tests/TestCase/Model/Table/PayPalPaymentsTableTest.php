@@ -4,7 +4,7 @@ namespace PayPal\Test\TestCase\Model\Table;
 
 use Cake\Event\EventList;
 use Cake\Event\EventManager;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use Cake\TestSuite\TestCase;
 use PayPal\Api\Payment;
 use PayPal\Api\RelatedResources;
@@ -23,7 +23,9 @@ class PayPalPaymentsTableTest extends TestCase
     {
         parent::setUp();
         $this->PayPalPayments = $this->getTableLocator()->get('PayPal.PayPalPayments');
-        $this->PayPalPayments->getEventManager()->setEventList(new EventList());
+        /** @var EventManager */
+        $eventManager = $this->PayPalPayments->getEventManager();
+        $eventManager->setEventList(new EventList());
     }
 
     public function testGetApiContext()
@@ -44,16 +46,18 @@ class PayPalPaymentsTableTest extends TestCase
 
     public function testRefreshState()
     {
+        /** @var MockObject|PayPalPaymentsTable */
         $model = $this->getMockForModel('PayPal.PayPalPayments', ['ApiGet', 'savePayment']);
 
+        $dummy = new Payment();
         $model->expects($this->once())
             ->method('ApiGet')
             ->with('PayPalId')
-            ->willReturn('dummy');
+            ->willReturn($dummy);
 
         $model->expects($this->once())
             ->method('savePayment')
-            ->with('dummy');
+            ->with($dummy);
 
         $model->refreshState('1');
     }
@@ -145,7 +149,7 @@ class PayPalPaymentsTableTest extends TestCase
     {
         /** @var MockObject|Payment */
         $p = $this->getMockBuilder(Payment::class)
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
 
         $p->expects($this->once())
@@ -161,13 +165,14 @@ class PayPalPaymentsTableTest extends TestCase
                 ['http://cancel', $this->greaterThan(0)])
             ->willReturn('ok', 'cancel');
 
+        $entity = new Entity();
         $model->expects($this->once())
             ->method('savePayment')
             ->with($p, $this->greaterThan(0))
-            ->willReturn('saved');
+            ->willReturn($entity);
 
         $ret = $model->createPayment('ri', $p, 'http://ok', 'http://cancel');
-        $this->assertEquals('saved', $ret);
+        $this->assertEquals($entity, $ret);
         $redirectUrls = $p->getRedirectUrls();
         $this->assertTextContains('1/ok', $redirectUrls->getReturnUrl());
         $this->assertTextContains('0/cancel', $redirectUrls->getCancelUrl());
@@ -188,7 +193,7 @@ class PayPalPaymentsTableTest extends TestCase
 
         /** @var MockObject|Payment */
         $p = $this->getMockBuilder(Payment::class)
-            ->setMethods(['execute'])
+            ->onlyMethods(['execute'])
             ->getMock();
 
         $p->setState($paymentState);
@@ -260,7 +265,7 @@ class PayPalPaymentsTableTest extends TestCase
 
         /** @var MockObject|Payment */
         $p = $this->getMockBuilder(Payment::class)
-            ->setMethods(['execute'])
+            ->onlyMethods(['execute'])
             ->getMock();
 
         $p->expects($this->once())

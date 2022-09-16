@@ -3,15 +3,17 @@
 namespace PayPal\Model\Table;
 
 use Cake\Core\Configure;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
-
+use PayPal\Api\Payment;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\PaymentExecution;
+use PayPal\Api\RelatedResources;
 
 class PayPalPaymentsTable extends Table
 {
@@ -25,9 +27,8 @@ class PayPalPaymentsTable extends Table
     /**
      * Workaround for buggy paypal rest api
      * @param type $transactions
-     * @return \PayPal\Api\RelatedResources
      */
-    protected function getRelatedResources($transactions)
+    protected function getRelatedResources($transactions): ?RelatedResources
     {
         $relatedResources = $transactions[0]->getRelatedResources();
         if (is_array($relatedResources))
@@ -41,9 +42,9 @@ class PayPalPaymentsTable extends Table
 
     /**
      *
-     * @param \PayPal\Api\Payment $payment
+     * @param Payment $payment
      */
-    public function savePayment($payment, $id = null, $remittanceIdentifier = null)
+    public function savePayment(Payment $payment, $id = null, $remittanceIdentifier = null): EntityInterface
     {
         $paymentId = $payment->getId();
 
@@ -66,10 +67,8 @@ class PayPalPaymentsTable extends Table
 
         $record->payment_state = $payment->getState();
 
-        /** @var \PayPal\Api\Transaction */
         $transactions = $payment->getTransactions();
 
-        /** @var \PayPal\Api\RelatedResources Description */
         $relatedResources = $this->getRelatedResources($transactions);
 
         if (!empty($relatedResources))
@@ -89,7 +88,7 @@ class PayPalPaymentsTable extends Table
      * @param \PayPal\Api\Payment $payment
      * @throws \Exception
      */
-    public function createPayment($remittanceIdentifier, &$payment, $okUrl, $cancelUrl)
+    public function createPayment(string $remittanceIdentifier, Payment &$payment, string $okUrl, string $cancelUrl)
     {
         return $this->getConnection()->transactional(function () use ($remittanceIdentifier, &$payment, $okUrl, $cancelUrl) {
             $record = $this->newEntity([
@@ -114,7 +113,7 @@ class PayPalPaymentsTable extends Table
         });
     }
 
-    public function execute($id, $payerId)
+    public function execute(int $id, ?string $payerId)
     {
         $record = $this->findById($id)->first();
         if (empty($record) || empty($payerId))
@@ -160,7 +159,7 @@ class PayPalPaymentsTable extends Table
         $this->savePayment($ppRes, null, $remittanceIdentifier);
     }
 
-    public static function getApiContext()
+    public static function getApiContext(): ApiContext
     {
         $config = Configure::read('PayPal');
         $credentials = self::getCredentials();
@@ -169,7 +168,10 @@ class PayPalPaymentsTable extends Table
         return $apiContext;
     }
 
-    public function refreshState($id)
+    /**
+     * @return bool|EntityInterface false, when lookup by id failed
+     */
+    public function refreshState(int $id)
     {
         $payment = $this->findById($id)->first();
         if (empty($payment))
@@ -180,7 +182,7 @@ class PayPalPaymentsTable extends Table
         return $this->savePayment($ppp);
     }
 
-    public function encryptRedirectUrl($text, $id)
+    public function encryptRedirectUrl(string $text, int $id)
     {
         $credentials = self::getCredentials();
         $compressed = gzcompress($text, 9);
@@ -188,7 +190,7 @@ class PayPalPaymentsTable extends Table
         return self::base64_url_encode(Security::encrypt($compressed, $key)) ;
     }
 
-    public function decryptRedirectUrl($encryptedText, $id)
+    public function decryptRedirectUrl(string $encryptedText, int $id)
     {
         $credentials = self::getCredentials();
         $key = $credentials['ClientSecret'] . $id;
@@ -196,22 +198,22 @@ class PayPalPaymentsTable extends Table
         return gzuncompress($compressed);
     }
 
-    public static function base64_url_encode($input)
+    public static function base64_url_encode(string $input): string
     {
         return strtr(base64_encode($input) , '+/=', '-_,');
     }
 
-    public static function base64_url_decode($input)
+    public static function base64_url_decode(string $input)
     {
         return base64_decode(strtr($input, '-_,', '+/='));
     }
 
-    protected function ApiGet($paymentId)
+    protected function ApiGet($paymentId): Payment
     {
         return \PayPal\Api\Payment::get($paymentId, self::getApiContext());
     }
 
-    private static function getCredentials()
+    private static function getCredentials(): array
     {
         $config = Configure::read('PayPal');
         $mode = $config['rest-api']['mode'];

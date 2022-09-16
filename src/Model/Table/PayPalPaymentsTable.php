@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
+use DateTime;
 use PayPal\Api\Payment;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
@@ -44,7 +45,7 @@ class PayPalPaymentsTable extends Table
      *
      * @param Payment $payment
      */
-    public function savePayment(Payment $payment, $id = null, $remittanceIdentifier = null): EntityInterface
+    public function savePayment(Payment $payment, $id = null, $remittanceIdentifier = null, bool $remitted = false): EntityInterface
     {
         $paymentId = $payment->getId();
 
@@ -66,6 +67,8 @@ class PayPalPaymentsTable extends Table
             $record->payment_id = $paymentId;
 
         $record->payment_state = $payment->getState();
+        if ($remitted)
+            $record->remitted_moment = new DateTime('now');
 
         $transactions = $payment->getTransactions();
 
@@ -143,7 +146,9 @@ class PayPalPaymentsTable extends Table
             $relatedResources = $this->getRelatedResources($transactions);
             $sale = $relatedResources->getSale();
             $saleState = $sale->getState();
-            if ($saleState == 'completed' && $paymentState == 'approved')
+            $remitted = $saleState == 'completed' && $paymentState == 'approved';
+            $this->savePayment($ppRes, null, $remittanceIdentifier, $remitted);
+            if ($remitted)
                 $event = new Event('PayPal.AfterPaymentExecution',
                     $this, ['RemittanceIdentifier' => $remittanceIdentifier]);
         }
@@ -155,8 +160,6 @@ class PayPalPaymentsTable extends Table
 
             $this->getEventManager()->dispatch($event);
         }
-
-        $this->savePayment($ppRes, null, $remittanceIdentifier);
     }
 
     public static function getApiContext(): ApiContext

@@ -141,8 +141,9 @@ class PayPalPaymentsTableTest extends TestCase
         $p->setId('foo');
         $p->setTransactions($transactions);
 
-        $result = $model->savePayment($p, null, 'myri');
+        $result = $model->savePayment($p, null, 'myri', true);
         $this->assertEquals('done', $result->sale_state);
+        $this->assertNotEmpty($result->remitted_moment);
     }
 
     public function testCreatePayment()
@@ -229,7 +230,12 @@ class PayPalPaymentsTableTest extends TestCase
     {
         $model = $this->prepareExecuteTest();
 
+        $model->expects($this->once())
+            ->method('savePayment')
+            ->with($this->anything(), null, 'ri', true);
+
         $model->execute(1, 'payer');
+
         $this->assertEventFiredWith('PayPal.BeforePaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
         $this->assertEventFiredWith('PayPal.AfterPaymentExecution', 'RemittanceIdentifier', 'ri', $model->getEventManager());
     }

@@ -3,7 +3,6 @@
 namespace PayPal\Model\Table;
 
 use Cake\Core\Configure;
-use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Routing\Router;
@@ -15,6 +14,8 @@ use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\PaymentExecution;
 use PayPal\Api\RelatedResources;
+use PayPal\Api\Transaction;
+use PayPal\Model\Entity\PayPalPayment;
 
 class PayPalPaymentsTable extends Table
 {
@@ -27,7 +28,7 @@ class PayPalPaymentsTable extends Table
 
     /**
      * Workaround for buggy paypal rest api
-     * @param type $transactions
+     * @param null|Transaction[] $transactions
      */
     protected function getRelatedResources($transactions): ?RelatedResources
     {
@@ -45,19 +46,22 @@ class PayPalPaymentsTable extends Table
      *
      * @param Payment $payment
      */
-    public function savePayment(Payment $payment, $id = null, $remittanceIdentifier = null, bool $remitted = false): EntityInterface
+    public function savePayment(Payment $payment, $id = null, $remittanceIdentifier = null, bool $remitted = false): PayPalPayment
     {
         $paymentId = $payment->getId();
 
+        /** @var PayPalPayment */
         $record = $this->findByPaymentId($paymentId)->first();
         if (empty($record) && $id != null)
         {
+            /** @var PayPalPayment */
             $record = $this->findById($id)->first();
         }
 
         if (empty($record))
         {
-            $record = $this->newEntity([
+            /** @var PayPalPayment */
+            $record = new PayPalPayment([
                 'payment_id' => $paymentId,
                 'remittance_identifier' => $remittanceIdentifier
             ]);
@@ -124,7 +128,6 @@ class PayPalPaymentsTable extends Table
 
         $apiContext = self::getApiContext();
         $remittanceIdentifier = $record->remittance_identifier;
-        /* @var $ppReq Payment */
         $ppReq = $this->ApiGet($record->payment_id);
 
         $execution = new PaymentExecution();
@@ -172,10 +175,11 @@ class PayPalPaymentsTable extends Table
     }
 
     /**
-     * @return bool|EntityInterface false, when lookup by id failed
+     * @return bool|PayPalPayment false, when lookup by id failed
      */
     public function refreshState(int $id)
     {
+        /** @var PayPalPayment */
         $payment = $this->findById($id)->first();
         if (empty($payment))
             return false;

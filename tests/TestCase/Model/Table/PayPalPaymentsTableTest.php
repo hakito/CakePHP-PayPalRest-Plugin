@@ -9,6 +9,7 @@ use Cake\TestSuite\TestCase;
 use PayPal\Api\Payment;
 use PayPal\Api\RelatedResources;
 use PayPal\Api\Sale;
+use PayPal\Model\Entity\PayPalPayment;
 use PayPal\Model\Table\PayPalPaymentsTable;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -166,7 +167,7 @@ class PayPalPaymentsTableTest extends TestCase
                 ['http://cancel', $this->greaterThan(0)])
             ->willReturn('ok', 'cancel');
 
-        $entity = new Entity();
+        $entity = new PayPalPayment();
         $model->expects($this->once())
             ->method('savePayment')
             ->with($p, $this->greaterThan(0))

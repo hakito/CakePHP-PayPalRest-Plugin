@@ -84,7 +84,8 @@ To receive the payment notifications in your app the Plugin expects 3 event hand
 
 ```php
 
-$eventManager = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments')->getEventManager();
+$payPalPayments = TableRegistry::getTableLocator()->get('PayPal.PayPalPayments');
+$eventManager = $payPalPayments->getEventManager();
 $eventManager->setEventList(new EventList());
 
 // Will be called just after PayPal redirects the customer
@@ -108,6 +109,15 @@ function($event, $remittanceIdentifier) {});
 // (You could commit a transaction here)
 $eventManager->on('PayPal.AfterPaymentExecution',
 function($event, $remittanceIdentifier) {});
+
+```
+
+To issue a full refund lookup the payment and issue the refund.
+
+```php
+
+$payPalPayment = $payPalPayments->findByRemittanceIdentifier($remittanceIdentifier);
+$payPalPayments->refundPayment($payPalPayment);
 
 ```
 

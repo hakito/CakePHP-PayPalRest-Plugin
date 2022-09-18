@@ -8,12 +8,16 @@ use Cake\ORM\Table;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
 use DateTime;
+use PayPal\Api\DetailedRefund;
 use PayPal\Api\Payment;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\PaymentExecution;
+use PayPal\Api\Refund;
+use PayPal\Api\RefundRequest;
 use PayPal\Api\RelatedResources;
+use PayPal\Api\Sale;
 use PayPal\Api\Transaction;
 use PayPal\Model\Entity\PayPalPayment;
 
@@ -165,6 +169,33 @@ class PayPalPaymentsTable extends Table
         }
     }
 
+    /**
+     * Performs a full refund.
+     * @return bool|DetailedRefund false when payment not found
+     */
+    public function refund(int $id)
+    {
+        /** @var PayPalPayment */
+        $payPalPayment = $this->findById($id)->first();
+        if (empty($payPalPayment))
+            return false;
+
+        return $this->refundPayment($payPalPayment);
+    }
+
+    /**
+     * Performs a full refund
+     * @return DetailedRefund
+     */
+    public function refundPayment(PayPalPayment $payPalPayment)
+    {
+        $ppReq = $this->ApiGet($payPalPayment->payment_id);
+        $transactions = $ppReq->getTransactions();
+        $relatedResources = $this->getRelatedResources($transactions);
+        $sale = $relatedResources->getSale();
+        return $this->ApiRefundSale($sale);
+    }
+
     public static function getApiContext(): ApiContext
     {
         $config = Configure::read('PayPal');
@@ -218,6 +249,11 @@ class PayPalPaymentsTable extends Table
     protected function ApiGet($paymentId): Payment
     {
         return \PayPal\Api\Payment::get($paymentId, self::getApiContext());
+    }
+
+    protected function ApiRefundSale(Sale $sale): DetailedRefund
+    {
+        return $sale->refundSale(new RefundRequest(), self::getApiContext());
     }
 
     private static function getCredentials(): array

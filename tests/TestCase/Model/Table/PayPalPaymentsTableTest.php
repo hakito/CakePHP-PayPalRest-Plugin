@@ -4,11 +4,12 @@ namespace PayPal\Test\TestCase\Model\Table;
 
 use Cake\Event\EventList;
 use Cake\Event\EventManager;
-use Cake\ORM\Entity;
 use Cake\TestSuite\TestCase;
+use PayPal\Api\DetailedRefund;
 use PayPal\Api\Payment;
 use PayPal\Api\RelatedResources;
 use PayPal\Api\Sale;
+use PayPal\Api\Transaction;
 use PayPal\Model\Entity\PayPalPayment;
 use PayPal\Model\Table\PayPalPaymentsTable;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -61,6 +62,34 @@ class PayPalPaymentsTableTest extends TestCase
             ->with($dummy);
 
         $model->refreshState('1');
+    }
+
+    public function testRefund()
+    {
+        /** @var MockObject|PayPalPaymentsTable */
+        $model = $this->getMockForModel('PayPal.PayPalPayments', ['ApiGet', 'ApiRefundSale', 'savePayment']);
+
+        $payment = new Payment();
+        $transaction = new Transaction();
+        $sale = new Sale();
+        $sale->setId('123');
+        $relatedResources = new RelatedResources();
+        $relatedResources->setSale($sale);
+        $transaction->setRelatedResources($relatedResources);
+        $transactions = [$transaction];
+        $payment->setTransactions($transactions);
+        $model->expects($this->once())
+            ->method('ApiGet')
+            ->with('PayPalId')
+            ->willReturn($payment);
+        $detailRefund = new DetailedRefund();
+        $model->expects($this->once())
+            ->method('ApiRefundSale')
+            ->with($sale)
+            ->willReturn($detailRefund);
+
+        $actual = $model->refund(1);
+        $this->assertEquals($detailRefund, $actual);
     }
 
     public function testSavePayment()

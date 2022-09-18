@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/hakito/CakePHP-EpsBankTransfer-Plugin.svg?branch=master)](https://app.travis-ci.com/hakito/CakePHP-EpsBankTransfer-Plugin)
+[![Build Status](https://app.travis-ci.com/hakito/CakePHP-PayPalRest-Plugin.svg?branch=master)](https://app.travis-ci.com/hakito/CakePHP-PayPalRest-Plugin)
 [![Coverage Status](https://coveralls.io/repos/github/hakito/CakePHP-PayPalRest-Plugin/badge.svg?branch=master)](https://coveralls.io/github/hakito/CakePHP-PayPalRest-Plugin?branch=master)
 [![Latest Stable Version](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/v/stable.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![Total Downloads](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/downloads.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![Latest Unstable Version](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/v/unstable.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin) [![License](https://poser.pugx.org/hakito/cakephp-paypal-rest-plugin/license.svg)](https://packagist.org/packages/hakito/cakephp-paypal-rest-plugin)
 

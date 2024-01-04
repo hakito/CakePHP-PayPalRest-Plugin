@@ -4,6 +4,7 @@ namespace PayPal\Controller\Component;
 
 use Cake\Core\Configure;
 use Cake\Controller\Component;
+use Cake\Controller\Controller;
 use Cake\Datasource\Exception\MissingDatasourceConfigException;
 use Cake\Database\Exception\NestedTransactionRollbackException;
 use Cake\Datasource\FactoryLocator;
@@ -30,6 +31,10 @@ class PayPalComponent extends Component
 
     /** @var PayPalPaymentsTable */
     public $PayPalPayments;
+
+    public $config;
+
+    public Controller $Controller;
 
     public function initialize(array $config): void
     {
